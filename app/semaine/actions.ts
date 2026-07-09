@@ -37,17 +37,31 @@ export async function addToWeeklyList(recipeId: string, slug: string): Promise<s
   return entryId;
 }
 
-export async function removeFromWeeklyList(id: string, slug: string) {
+export async function removeFromWeeklyList(id: string, slug: string | null) {
   const supabase = await createClient();
   await supabase.from("weekly_recipes").delete().eq("id", id);
 
   revalidatePath("/semaine");
-  revalidatePath(`/recettes/${slug}`);
+  if (slug) revalidatePath(`/recettes/${slug}`);
+}
+
+export async function addCustomWeeklyEntry(formData: FormData) {
+  const title = String(formData.get("title") ?? "").trim();
+  if (!title) return;
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("weekly_recipes").insert({ custom_title: title });
+
+  if (error) {
+    console.error("Erreur lors de l'ajout de l'entrée libre :", error.message);
+  }
+
+  revalidatePath("/semaine");
 }
 
 export async function setWeeklyField(
   id: string,
-  recipeId: string,
+  recipeId: string | null,
   field: "is_cooked" | "is_eaten" | "has_leftovers",
   formData: FormData
 ) {
@@ -58,7 +72,8 @@ export async function setWeeklyField(
 
   // On garde une trace durable de la dernière fois qu'une recette a
   // été mangée, même après avoir vidé la liste de la semaine.
-  if (field === "is_eaten" && value) {
+  // (Les entrées libres, sans recette liée, n'ont rien à mettre à jour ici.)
+  if (field === "is_eaten" && value && recipeId) {
     await supabase
       .from("recipes")
       .update({ last_eaten_at: new Date().toISOString() })

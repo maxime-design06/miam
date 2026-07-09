@@ -2,10 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export interface WeeklyEntry {
   id: string;
-  recipeId: string;
+  recipeId: string | null;
   title: string;
-  slug: string;
+  slug: string | null;
   imageUrl: string | null;
+  isCustom: boolean;
   isCooked: boolean;
   isEaten: boolean;
   hasLeftovers: boolean;
@@ -13,7 +14,8 @@ export interface WeeklyEntry {
 
 type WeeklyRow = {
   id: string;
-  recipe_id: string;
+  recipe_id: string | null;
+  custom_title: string | null;
   is_cooked: boolean;
   is_eaten: boolean;
   has_leftovers: boolean;
@@ -22,14 +24,17 @@ type WeeklyRow = {
 
 /**
  * Récupère la liste des recettes ajoutées pour la semaine en cours,
- * avec leur statut (cuisinée, mangée, restes).
+ * avec leur statut (cuisinée, mangée, restes). Certaines entrées
+ * peuvent être du simple texte libre, sans fiche recette liée.
  */
 export async function getWeeklyList(): Promise<WeeklyEntry[]> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("weekly_recipes")
-    .select("id, recipe_id, is_cooked, is_eaten, has_leftovers, recipes ( title, slug, image_url )")
+    .select(
+      "id, recipe_id, custom_title, is_cooked, is_eaten, has_leftovers, recipes ( title, slug, image_url )"
+    )
     .order("added_at", { ascending: true });
 
   if (error) {
@@ -42,9 +47,10 @@ export async function getWeeklyList(): Promise<WeeklyEntry[]> {
     return {
       id: row.id,
       recipeId: row.recipe_id,
-      title: recipe?.title ?? "Recette supprimée",
-      slug: recipe?.slug ?? "",
+      title: recipe?.title ?? row.custom_title ?? "Sans titre",
+      slug: recipe?.slug ?? null,
       imageUrl: recipe?.image_url ?? null,
+      isCustom: !row.recipe_id,
       isCooked: row.is_cooked,
       isEaten: row.is_eaten,
       hasLeftovers: row.has_leftovers,

@@ -1,7 +1,12 @@
 import Link from "next/link";
 import { getWeeklyList } from "@/lib/weekly";
 import { isLoggedIn } from "@/lib/recipes";
-import { removeFromWeeklyList, setWeeklyField, clearWeeklyList } from "@/app/semaine/actions";
+import {
+  removeFromWeeklyList,
+  setWeeklyField,
+  clearWeeklyList,
+  addCustomWeeklyEntry,
+} from "@/app/semaine/actions";
 import { AutoSubmitCheckbox } from "@/components/AutoSubmitCheckbox";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -25,6 +30,23 @@ export default async function SemainePage() {
         </span>
       </div>
 
+      {loggedIn && (
+        <form action={addCustomWeeklyEntry} className="flex gap-2 mb-6">
+          <input
+            type="text"
+            name="title"
+            placeholder="ex : pâtes sauce tomate (sans recette liée)"
+            className="flex-1 h-10 px-4 rounded-full bg-surface text-sm outline-none text-foreground"
+          />
+          <button
+            type="submit"
+            className="h-10 px-4 rounded-full bg-leaf text-white text-sm font-heading font-bold"
+          >
+            Ajouter
+          </button>
+        </form>
+      )}
+
       {loggedIn && entries.length > 0 && (
         <form action={clearWeeklyList} className="mb-6">
           <button type="submit" className="text-sm text-papaya">
@@ -35,7 +57,8 @@ export default async function SemainePage() {
 
       {entries.length === 0 ? (
         <p className="text-muted text-sm">
-          Aucune recette pour cette semaine. Ajoute-en depuis une fiche recette.
+          Aucune recette pour cette semaine. Ajoute-en depuis une fiche recette, ou juste un texte
+          libre ci-dessus.
         </p>
       ) : (
         <ul className="space-y-3">
@@ -44,12 +67,18 @@ export default async function SemainePage() {
               key={entry.id}
               className="bg-surface rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4"
             >
-              <Link
-                href={`/recettes/${entry.slug}`}
-                className="font-heading font-bold text-sm text-foreground flex-1"
-              >
-                {entry.title}
-              </Link>
+              {entry.slug ? (
+                <Link
+                  href={`/recettes/${entry.slug}`}
+                  className="font-heading font-bold text-sm text-foreground flex-1"
+                >
+                  {entry.title}
+                </Link>
+              ) : (
+                <span className="font-heading font-bold text-sm text-foreground flex-1">
+                  {entry.title}
+                </span>
+              )}
 
               <div className="flex items-center gap-4 text-xs">
                 {statusFields.map(({ field, key, label }) => {
