@@ -14,8 +14,8 @@ export const accentBg: Record<Recipe["accentColor"], string> = {
 // Sur fond clair (jaune/pulp), on assombrit l'icône plutôt que
 // de la mettre en blanc, pour garder un bon contraste.
 export const accentIconColor: Record<Recipe["accentColor"], string> = {
-  papaya: "text-cream",
-  mango: "text-cream",
+  papaya: "text-white",
+  mango: "text-white",
   pulp: "text-[#5C3A0F]",
   kiwi: "text-[#2E3A19]",
   leaf: "text-white",

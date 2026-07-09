@@ -34,7 +34,7 @@ export default async function AdminPage({
       <div className="flex gap-3 mb-6">
         <Link
           href="/admin/recettes/nouvelle"
-          className="inline-block px-4 py-2 rounded-full bg-papaya text-cream text-sm font-heading font-bold"
+          className="inline-block px-4 py-2 rounded-full bg-papaya text-white text-sm font-heading font-bold"
         >
           + Ajouter une recette
         </Link>
