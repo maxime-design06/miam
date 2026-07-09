@@ -19,12 +19,20 @@ export default async function AdminPage() {
         </div>
       </header>
 
-      <Link
-        href="/admin/recettes/nouvelle"
-        className="inline-block mb-6 px-4 py-2 rounded-full bg-papaya text-cream text-sm font-display"
-      >
-        + ajouter une recette
-      </Link>
+      <div className="flex gap-3 mb-6">
+        <Link
+          href="/admin/recettes/nouvelle"
+          className="inline-block px-4 py-2 rounded-full bg-papaya text-cream text-sm font-display"
+        >
+          + ajouter une recette
+        </Link>
+        <Link
+          href="/admin/recettes/importer"
+          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-display"
+        >
+          importer depuis Instagram
+        </Link>
+      </div>
 
       {recipes.length === 0 ? (
         <p className="text-muted text-sm">Aucune recette pour le moment.</p>
