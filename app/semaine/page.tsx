@@ -16,7 +16,12 @@ const statusFields = [
   { field: "hasLeftovers" as const, key: "has_leftovers" as const, label: "Restes" },
 ];
 
-export default async function SemainePage() {
+export default async function SemainePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const { error } = await searchParams;
   const [entries, loggedIn] = await Promise.all([getWeeklyList(), isLoggedIn()]);
 
   return (
@@ -29,6 +34,12 @@ export default async function SemainePage() {
           {entries.length} recette{entries.length > 1 ? "s" : ""}
         </span>
       </div>
+
+      {error && (
+        <p className="text-sm text-papaya mb-4">
+          Une erreur est survenue, l&apos;ajout n&apos;a pas fonctionné. Réessaie.
+        </p>
+      )}
 
       {loggedIn && (
         <form action={addCustomWeeklyEntry} className="flex gap-2 mb-6">

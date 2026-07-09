@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 export async function addToWeeklyList(recipeId: string, slug: string): Promise<string> {
@@ -47,16 +48,18 @@ export async function removeFromWeeklyList(id: string, slug: string | null) {
 
 export async function addCustomWeeklyEntry(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
-  if (!title) return;
+  if (!title) redirect("/semaine");
 
   const supabase = await createClient();
   const { error } = await supabase.from("weekly_recipes").insert({ custom_title: title });
 
   if (error) {
     console.error("Erreur lors de l'ajout de l'entrée libre :", error.message);
+    redirect("/semaine?error=1");
   }
 
   revalidatePath("/semaine");
+  redirect("/semaine");
 }
 
 export async function setWeeklyField(
