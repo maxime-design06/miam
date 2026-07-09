@@ -252,6 +252,76 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
  * Fait en deux requêtes simples plutôt qu'une seule requête avec
  * une jointure imbriquée sur deux niveaux, plus fiable avec Supabase.
  */
+type TagLinkRow = {
+  recipe_id: string;
+};
+
+/**
+ * Récupère jusqu'à `limit` recettes portant un tag donné (par son slug).
+ * Utilisée pour les suggestions de l'accueil (moment de la journée,
+ * saison). Renvoie un tableau vide si aucune recette n'a ce tag —
+ * dans ce cas, mieux vaut ne rien afficher que des recettes au hasard.
+ */
+export async function getRecipesByTagSlug(tagSlug: string, limit: number): Promise<Recipe[]> {
+  const supabase = await createClient();
+
+  const { data: links, error: linksError } = await supabase
+    .from("recipe_tags")
+    .select("recipe_id, tags!inner ( slug )")
+    .eq("tags.slug", tagSlug);
+
+  if (linksError || !links || links.length === 0) {
+    if (linksError) console.error("Erreur lors de la recherche par tag :", linksError.message);
+    return [];
+  }
+
+  const ids = (links as unknown as TagLinkRow[]).map((link) => link.recipe_id);
+
+  const { data: rows, error } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
+    )
+    .in("id", ids)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !rows) {
+    if (error) console.error("Erreur lors de la récupération des recettes :", error.message);
+    return [];
+  }
+
+  const { data: categoryLinks } = await supabase
+    .from("recipe_categories")
+    .select("recipe_id, categories ( name )")
+    .in("recipe_id", rows.map((row) => row.id));
+
+  const categoryByRecipeId = new Map<string, string>();
+  for (const link of (categoryLinks as CategoryLinkRow[] | null) ?? []) {
+    const categoryEntry = Array.isArray(link.categories) ? link.categories[0] : link.categories;
+    if (categoryEntry?.name) {
+      categoryByRecipeId.set(link.recipe_id, categoryEntry.name);
+    }
+  }
+
+  return (rows as RecipeRow[]).map((row) => {
+    const category = categoryByRecipeId.get(row.id) ?? "Plats";
+    return {
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      description: row.description ?? "",
+      imageUrl: row.image_url ?? null,
+      prepTimeMinutes: row.prep_time_minutes ?? 0,
+      cookTimeMinutes: row.cook_time_minutes ?? 0,
+      servings: row.servings ?? 1,
+      difficulty: row.difficulty ?? "facile",
+      category,
+      accentColor: categoryAccent[category] ?? "kiwi",
+    };
+  });
+}
+
 export interface PaginatedRecipes {
   recipes: Recipe[];
   total: number;

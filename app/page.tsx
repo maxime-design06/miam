@@ -3,13 +3,26 @@ import { Search } from "lucide-react";
 import { RecipeCard } from "@/components/RecipeCard";
 import { CategoryPills } from "@/components/CategoryPills";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getRecipesPaginated, getCategories } from "@/lib/recipes";
+import {
+  getRecipesPaginated,
+  getRecipesByTagSlug,
+  getCategories,
+  isLoggedIn,
+} from "@/lib/recipes";
+import { getMealPeriod, getCurrentSeason } from "@/lib/time-context";
 
 export default async function Home() {
-  const [{ recipes }, categories] = await Promise.all([
-    getRecipesPaginated({ pageSize: 8 }),
-    getCategories(),
-  ]);
+  const mealPeriod = getMealPeriod();
+  const season = getCurrentSeason();
+
+  const [{ recipes: latest }, categories, mealSuggestions, seasonSuggestions, loggedIn] =
+    await Promise.all([
+      getRecipesPaginated({ pageSize: 4 }),
+      getCategories(),
+      getRecipesByTagSlug(mealPeriod.slug, 4),
+      getRecipesByTagSlug(season.slug, 4),
+      isLoggedIn(),
+    ]);
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 py-8">
@@ -37,18 +50,62 @@ export default async function Home() {
       {/* Filtres */}
       <CategoryPills categories={categories} />
 
-      {/* Grille de recettes */}
+      {/* Dernières recettes ajoutées */}
+      <h2 className="font-heading font-bold text-lg text-foreground mb-4">
+        Ajoutées récemment
+      </h2>
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        {recipes.map((recipe) => (
+        {latest.map((recipe) => (
           <RecipeCard key={recipe.id} recipe={recipe} />
         ))}
       </section>
-
-      <div className="text-center">
+      <div className="text-center mb-12">
         <Link href="/recettes" className="text-sm text-leaf">
           Voir toutes les recettes →
         </Link>
       </div>
+
+      {/* Suggestion selon le moment de la journée */}
+      {mealSuggestions.length > 0 ? (
+        <>
+          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
+            Idée pour {mealPeriod.label}
+          </h2>
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            {mealSuggestions.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </section>
+        </>
+      ) : (
+        loggedIn && (
+          <p className="text-sm text-muted mb-12">
+            Aucune recette taguée « {mealPeriod.slug} » pour l&apos;instant. Ajoute ce tag à
+            quelques recettes pour voir des suggestions pour {mealPeriod.label} ici.
+          </p>
+        )
+      )}
+
+      {/* Suggestion selon la saison */}
+      {seasonSuggestions.length > 0 ? (
+        <>
+          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
+            Recettes de saison : {season.label}
+          </h2>
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {seasonSuggestions.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </section>
+        </>
+      ) : (
+        loggedIn && (
+          <p className="text-sm text-muted">
+            Aucune recette taguée « {season.slug} » pour l&apos;instant. Ajoute ce tag à quelques
+            recettes pour voir des suggestions de saison ici.
+          </p>
+        )
+      )}
     </main>
   );
 }
