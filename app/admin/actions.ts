@@ -126,6 +126,30 @@ async function saveRelatedData(
   }
 }
 
+export async function createTag(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) redirect("/admin/tags");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("tags").insert({ name, slug: slugify(name) });
+
+  if (error) {
+    console.error("Erreur lors de la création du tag :", error.message);
+    redirect("/admin/tags?error=1");
+  }
+
+  revalidatePath("/admin/tags");
+  redirect("/admin/tags");
+}
+
+export async function deleteTag(id: string) {
+  const supabase = await createClient();
+  await supabase.from("tags").delete().eq("id", id);
+
+  revalidatePath("/admin/tags");
+  redirect("/admin/tags");
+}
+
 export async function createRecipe(formData: FormData) {
   const supabase = await createClient();
   const payload = parseRecipeForm(formData);

@@ -31,12 +31,20 @@ export default async function AdminPage({
         </div>
       </header>
 
-      <Link
-        href="/admin/recettes/nouvelle"
-        className="inline-block mb-6 px-4 py-2 rounded-full bg-papaya text-cream text-sm font-display"
-      >
-        + ajouter une recette
-      </Link>
+      <div className="flex gap-3 mb-6">
+        <Link
+          href="/admin/recettes/nouvelle"
+          className="inline-block px-4 py-2 rounded-full bg-papaya text-cream text-sm font-display"
+        >
+          + ajouter une recette
+        </Link>
+        <Link
+          href="/admin/tags"
+          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-display"
+        >
+          gérer les tags
+        </Link>
+      </div>
 
       {/* Recherche et tri */}
       <form method="get" action="/admin" className="flex gap-2 mb-6">
