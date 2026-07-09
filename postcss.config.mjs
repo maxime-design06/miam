@@ -1,2 +1,7 @@
-NEXT_PUBLIC_SUPABASE_URL=https://hthwjjwlyufwdugjfapv.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_OEkZIVKxuA45w6Feptp50g_EuUt9wbe
+const config = {
+  plugins: {
+    "@tailwindcss/postcss": {},
+  },
+};
+
+export default config;

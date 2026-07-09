@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Clock, Soup, ChefHat, Cake, Salad } from "lucide-react";
 import type { Recipe } from "@/types/recipe";
 
-const accentBg: Record<Recipe["accentColor"], string> = {
+export const accentBg: Record<Recipe["accentColor"], string> = {
   papaya: "bg-papaya",
   mango: "bg-mango",
   pulp: "bg-pulp",
@@ -13,7 +13,7 @@ const accentBg: Record<Recipe["accentColor"], string> = {
 
 // Sur fond clair (jaune/pulp), on assombrit l'icône plutôt que
 // de la mettre en blanc, pour garder un bon contraste.
-const accentIconColor: Record<Recipe["accentColor"], string> = {
+export const accentIconColor: Record<Recipe["accentColor"], string> = {
   papaya: "text-cream",
   mango: "text-cream",
   pulp: "text-[#5C3A0F]",
