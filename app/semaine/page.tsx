@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { User } from "lucide-react";
 import { getWeeklyList } from "@/lib/weekly";
 import { isLoggedIn } from "@/lib/recipes";
 import { removeFromWeeklyList, setWeeklyField, clearWeeklyList } from "@/app/semaine/actions";
 import { AutoSubmitCheckbox } from "@/components/AutoSubmitCheckbox";
+import { SiteHeader } from "@/components/SiteHeader";
 
 const statusFields = [
   { field: "isCooked" as const, key: "is_cooked" as const, label: "cuisinée" },
@@ -16,22 +16,10 @@ export default async function SemainePage() {
 
   return (
     <main className="max-w-3xl w-full mx-auto px-6 py-8">
-      <header className="flex items-center justify-between mb-10">
-        <Link href="/" className="font-display text-2xl text-papaya">
-          miam
-        </Link>
-        <nav className="flex items-center gap-5 text-sm text-foreground">
-          <Link href="/recettes">Recettes</Link>
-          <Link href="/categories">Catégories</Link>
-          <Link href="/semaine">Cette semaine</Link>
-          <Link href="/admin">
-            <User className="w-4 h-4" />
-          </Link>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-display text-2xl text-foreground">cette semaine</h1>
+        <h1 className="font-heading font-bold text-2xl text-foreground">cette semaine</h1>
         <span className="text-sm text-muted">
           {entries.length} recette{entries.length > 1 ? "s" : ""}
         </span>
@@ -58,7 +46,7 @@ export default async function SemainePage() {
             >
               <Link
                 href={`/recettes/${entry.slug}`}
-                className="font-display text-sm text-foreground flex-1"
+                className="font-heading font-bold text-sm text-foreground flex-1"
               >
                 {entry.title}
               </Link>

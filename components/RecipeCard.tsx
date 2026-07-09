@@ -53,7 +53,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         </div>
       )}
       <div className="p-3">
-        <p className="font-display text-sm text-foreground mb-1.5">
+        <p className="font-heading font-bold text-sm text-foreground mb-1.5">
           {recipe.title}
         </p>
         <div className="flex gap-2.5 text-xs text-muted">

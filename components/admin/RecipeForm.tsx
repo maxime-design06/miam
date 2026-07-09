@@ -276,7 +276,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
         <div className="space-y-2">
           {steps.map((step, index) => (
             <div key={index} className="flex gap-2">
-              <span className="font-display text-papaya w-6 pt-2 text-sm">{index + 1}</span>
+              <span className="font-heading font-bold text-papaya w-6 pt-2 text-sm">{index + 1}</span>
               <textarea
                 value={step.description}
                 onChange={(e) => {
@@ -348,7 +348,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
 
       <button
         type="submit"
-        className="px-6 h-11 rounded-full bg-leaf text-cream text-sm font-display"
+        className="px-6 h-11 rounded-full bg-leaf text-cream text-sm font-heading font-bold"
       >
         enregistrer
       </button>

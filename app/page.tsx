@@ -1,6 +1,7 @@
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { RecipeCard } from "@/components/RecipeCard";
 import { CategoryPills } from "@/components/CategoryPills";
+import { SiteHeader } from "@/components/SiteHeader";
 import { getRecipes, getCategories } from "@/lib/recipes";
 
 export default async function Home() {
@@ -8,23 +9,12 @@ export default async function Home() {
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 py-8">
-      {/* En-tête */}
-      <header className="flex items-center justify-between mb-10">
-        <span className="font-display text-2xl text-papaya">miam</span>
-        <nav className="flex items-center gap-5 text-sm text-foreground">
-          <a href="/recettes">Recettes</a>
-          <a href="/categories">Catégories</a>
-          <a href="/semaine">Cette semaine</a>
-          <a href="/admin"><User className="w-4 h-4" /></a>
-        </nav>
-      </header>
+      <SiteHeader />
 
       {/* Hero + recherche (redirige vers le catalogue avec le résultat) */}
       <section className="text-center py-6 mb-10">
-        <h1 className="font-display text-3xl md:text-4xl text-foreground mb-3 leading-relaxed">
-          on cuisine quoi,
-          <br />
-          aujourd&apos;hui ?
+        <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground mb-3 leading-relaxed whitespace-nowrap">
+          on cuisine quoi aujourd&apos;hui ?
         </h1>
         <p className="text-muted text-sm mb-6">
           plus de 1000 recettes, toutes au même endroit

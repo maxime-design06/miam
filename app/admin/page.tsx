@@ -34,19 +34,19 @@ export default async function AdminPage({
       <div className="flex gap-3 mb-6">
         <Link
           href="/admin/recettes/nouvelle"
-          className="inline-block px-4 py-2 rounded-full bg-papaya text-cream text-sm font-display"
+          className="inline-block px-4 py-2 rounded-full bg-papaya text-cream text-sm font-heading font-bold"
         >
           + ajouter une recette
         </Link>
         <Link
           href="/admin/tags"
-          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-display"
+          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-heading font-bold"
         >
           gérer les tags
         </Link>
         <Link
           href="/admin/categories"
-          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-display"
+          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-heading font-bold"
         >
           gérer les catégories
         </Link>
@@ -77,7 +77,7 @@ export default async function AdminPage({
         </select>
         <button
           type="submit"
-          className="h-10 px-4 rounded-full bg-leaf text-cream text-sm font-display"
+          className="h-10 px-4 rounded-full bg-leaf text-cream text-sm font-heading font-bold"
         >
           filtrer
         </button>

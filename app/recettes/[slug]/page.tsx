@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil } from "lucide-react";
+import { Clock, Users, ChefHat, Soup, Cake, Salad, Pencil } from "lucide-react";
 import { ExternalLink } from "lucide-react";
 import { getRecipeBySlug, isLoggedIn } from "@/lib/recipes";
 import { getWeeklyEntryForRecipe } from "@/lib/weekly";
 import { WeeklyToggleButton } from "@/components/WeeklyToggleButton";
+import { SiteHeader } from "@/components/SiteHeader";
 import { accentBg, accentIconColor } from "@/components/RecipeCard";
 import type { Recipe } from "@/types/recipe";
 
@@ -40,17 +41,7 @@ export default async function RecipePage({
 
   return (
     <main className="max-w-3xl w-full mx-auto px-6 py-8">
-      <header className="flex items-center justify-between mb-10">
-        <a href="/" className="font-display text-2xl text-papaya">
-          miam
-        </a>
-        <nav className="flex items-center gap-5 text-sm text-foreground">
-          <a href="/recettes">Recettes</a>
-          <a href="/categories">Catégories</a>
-          <a href="/semaine">Cette semaine</a>
-          <a href="/admin"><User className="w-4 h-4" /></a>
-        </nav>
-      </header>
+      <SiteHeader />
 
       {/* Bandeau visuel */}
       {recipe.imageUrl ? (
@@ -138,7 +129,7 @@ export default async function RecipePage({
       <div className="grid md:grid-cols-[1fr_1.6fr] gap-10">
         {/* Ingrédients */}
         <section>
-          <h2 className="font-display text-lg text-foreground mb-4">
+          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
             ingrédients
           </h2>
           {recipe.ingredients.length === 0 ? (
@@ -157,7 +148,7 @@ export default async function RecipePage({
 
         {/* Étapes */}
         <section>
-          <h2 className="font-display text-lg text-foreground mb-4">
+          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
             préparation
           </h2>
           {recipe.steps.length === 0 ? (
@@ -166,7 +157,7 @@ export default async function RecipePage({
             <ol className="space-y-4">
               {recipe.steps.map((step) => (
                 <li key={step.id} className="flex gap-3 text-sm text-foreground">
-                  <span className="font-display text-papaya shrink-0">
+                  <span className="font-heading font-bold text-papaya shrink-0">
                     {step.stepNumber}
                   </span>
                   <p>{step.description}</p>
@@ -180,7 +171,7 @@ export default async function RecipePage({
       {/* Conseils */}
       {recipe.tips.length > 0 && (
         <section className="mt-10 bg-surface rounded-2xl p-5">
-          <h2 className="font-display text-lg text-foreground mb-3">
+          <h2 className="font-heading font-bold text-lg text-foreground mb-3">
             conseils
           </h2>
           <ul className="space-y-2 text-sm text-foreground">

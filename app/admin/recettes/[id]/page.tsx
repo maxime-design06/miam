@@ -21,7 +21,7 @@ export default async function EditRecipePage({
 
   return (
     <main className="max-w-3xl w-full mx-auto px-6 py-8">
-      <h1 className="font-display text-2xl text-foreground mb-6">modifier la recette</h1>
+      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">modifier la recette</h1>
       <RecipeForm
         action={updateRecipe.bind(null, id)}
         categories={categories}

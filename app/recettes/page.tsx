@@ -1,6 +1,7 @@
-import { Search, User } from "lucide-react";
+import { Search } from "lucide-react";
 import { RecipeCard } from "@/components/RecipeCard";
 import { CategoryPills } from "@/components/CategoryPills";
+import { SiteHeader } from "@/components/SiteHeader";
 import { getRecipes, getCategories } from "@/lib/recipes";
 
 export default async function RecettesPage({
@@ -17,19 +18,9 @@ export default async function RecettesPage({
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 py-8">
-      <header className="flex items-center justify-between mb-10">
-        <a href="/" className="font-display text-2xl text-papaya">
-          miam
-        </a>
-        <nav className="flex items-center gap-5 text-sm text-foreground">
-          <a href="/recettes">Recettes</a>
-          <a href="/categories">Catégories</a>
-          <a href="/semaine">Cette semaine</a>
-          <a href="/admin"><User className="w-4 h-4" /></a>
-        </nav>
-      </header>
+      <SiteHeader />
 
-      <h1 className="font-display text-2xl text-foreground mb-6">
+      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">
         toutes les recettes
       </h1>
 

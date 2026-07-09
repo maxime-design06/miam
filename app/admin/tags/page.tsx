@@ -13,7 +13,7 @@ export default async function TagsPage({
   return (
     <main className="max-w-lg w-full mx-auto px-6 py-8">
       <header className="flex items-center justify-between mb-8">
-        <h1 className="font-display text-2xl text-papaya">tags</h1>
+        <h1 className="font-heading font-bold text-2xl text-papaya">tags</h1>
         <Link href="/admin" className="text-sm text-foreground">
           ← retour
         </Link>
@@ -29,7 +29,7 @@ export default async function TagsPage({
         />
         <button
           type="submit"
-          className="h-10 px-4 rounded-full bg-leaf text-cream text-sm font-display"
+          className="h-10 px-4 rounded-full bg-leaf text-cream text-sm font-heading font-bold"
         >
           ajouter
         </button>

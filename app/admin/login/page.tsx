@@ -32,7 +32,7 @@ export default async function LoginPage({
         />
         <button
           type="submit"
-          className="w-full h-10 rounded-full bg-leaf text-cream text-sm font-display"
+          className="w-full h-10 rounded-full bg-leaf text-cream text-sm font-heading font-bold"
         >
           se connecter
         </button>
