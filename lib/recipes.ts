@@ -45,6 +45,7 @@ export interface RecipeEditData {
   servings: number;
   difficulty: string;
   categoryId: string | null;
+  tagIds: string[];
   ingredients: { name: string; quantity: number | null; unit: string | null }[];
   steps: { description: string }[];
   tips: { tip: string }[];
@@ -70,7 +71,7 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
     return null;
   }
 
-  const [{ data: ingredients }, { data: steps }, { data: tips }, { data: categoryLink }] =
+  const [{ data: ingredients }, { data: steps }, { data: tips }, { data: categoryLink }, { data: tagLinks }] =
     await Promise.all([
       supabase
         .from("ingredients")
@@ -88,6 +89,7 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
         .select("category_id")
         .eq("recipe_id", id)
         .maybeSingle(),
+      supabase.from("recipe_tags").select("tag_id").eq("recipe_id", id),
     ]);
 
   return {
@@ -100,6 +102,7 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
     servings: recipe.servings ?? 1,
     difficulty: recipe.difficulty ?? "facile",
     categoryId: categoryLink?.category_id ?? null,
+    tagIds: (tagLinks ?? []).map((link) => link.tag_id),
     ingredients: (ingredients ?? []).map((i) => ({
       name: i.name,
       quantity: i.quantity,
@@ -108,6 +111,22 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
     steps: (steps ?? []).map((s) => ({ description: s.description })),
     tips: (tips ?? []).map((t) => ({ tip: t.tip })),
   };
+}
+
+export async function getTags() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("tags")
+    .select("id, name, slug")
+    .order("name");
+
+  if (error) {
+    console.error("Erreur lors de la récupération des tags :", error.message);
+    return [];
+  }
+
+  return data ?? [];
 }
 
 export async function getCategories() {
@@ -130,6 +149,7 @@ export interface RecipeDetail extends Recipe {
   ingredients: { id: string; name: string; quantity: number | null; unit: string | null }[];
   steps: { id: string; stepNumber: number; description: string }[];
   tips: { id: string; tip: string }[];
+  tags: { id: string; name: string }[];
 }
 
 /**
@@ -155,7 +175,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
     return null;
   }
 
-  const [{ data: ingredients }, { data: steps }, { data: tips }, { data: categoryLink }] =
+  const [{ data: ingredients }, { data: steps }, { data: tips }, { data: categoryLink }, { data: tagLinks }] =
     await Promise.all([
       supabase
         .from("ingredients")
@@ -177,11 +197,18 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
         .select("categories ( name )")
         .eq("recipe_id", recipe.id)
         .maybeSingle(),
+      supabase.from("recipe_tags").select("tags ( id, name )").eq("recipe_id", recipe.id),
     ]);
 
   const categoryEntry = categoryLink?.categories;
   const category = Array.isArray(categoryEntry) ? categoryEntry[0]?.name : undefined;
   const resolvedCategory = category ?? "Plats";
+
+  const tags = (tagLinks ?? []).flatMap((link) => {
+    const entry = link.tags;
+    const tagList = Array.isArray(entry) ? entry : entry ? [entry] : [];
+    return tagList.map((tag: { id: string; name: string }) => ({ id: tag.id, name: tag.name }));
+  });
 
   return {
     id: recipe.id,
@@ -206,6 +233,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
       description: s.description,
     })),
     tips: (tips ?? []).map((t) => ({ id: t.id, tip: t.tip })),
+    tags,
   };
 }
 

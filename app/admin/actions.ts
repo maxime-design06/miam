@@ -34,6 +34,7 @@ interface RecipeFormPayload {
   servings: number;
   difficulty: string;
   categoryId: string | null;
+  tagIds: string[];
   ingredients: { name: string; quantity: number | null; unit: string | null }[];
   steps: { description: string }[];
   tips: { tip: string }[];
@@ -52,6 +53,7 @@ function parseRecipeForm(formData: FormData): RecipeFormPayload {
     servings: Number(formData.get("servings") ?? 1) || 1,
     difficulty: String(formData.get("difficulty") ?? "facile"),
     categoryId: (formData.get("categoryId") as string) || null,
+    tagIds: formData.getAll("tagIds").map(String),
     ingredients: JSON.parse(String(formData.get("ingredientsJson") ?? "[]")).filter(
       (i: { name: string }) => i.name?.trim()
     ),
@@ -79,6 +81,13 @@ async function saveRelatedData(
     await supabase
       .from("recipe_categories")
       .insert({ recipe_id: recipeId, category_id: payload.categoryId });
+  }
+
+  await supabase.from("recipe_tags").delete().eq("recipe_id", recipeId);
+  if (payload.tagIds.length > 0) {
+    await supabase.from("recipe_tags").insert(
+      payload.tagIds.map((tagId) => ({ recipe_id: recipeId, tag_id: tagId }))
+    );
   }
 
   await supabase.from("ingredients").delete().eq("recipe_id", recipeId);

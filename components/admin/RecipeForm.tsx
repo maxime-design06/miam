@@ -17,6 +17,7 @@ interface Tip {
 interface RecipeFormProps {
   action: (formData: FormData) => void;
   categories: { id: string; name: string }[];
+  tags: { id: string; name: string }[];
   initial?: {
     title: string;
     slug: string;
@@ -26,6 +27,7 @@ interface RecipeFormProps {
     servings: number;
     difficulty: string;
     categoryId: string | null;
+    tagIds?: string[];
     ingredients: Ingredient[];
     steps: Step[];
     tips: Tip[];
@@ -35,7 +37,8 @@ interface RecipeFormProps {
 const inputClass =
   "w-full h-10 px-4 rounded-full bg-surface text-sm outline-none text-foreground";
 
-export function RecipeForm({ action, categories, initial }: RecipeFormProps) {
+export function RecipeForm({ action, categories, tags, initial }: RecipeFormProps) {
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initial?.tagIds ?? []);
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     initial?.ingredients?.length ? initial.ingredients : [{ name: "", quantity: null, unit: "" }]
   );
@@ -117,6 +120,40 @@ export function RecipeForm({ action, categories, initial }: RecipeFormProps) {
             </option>
           ))}
         </select>
+      </div>
+
+      <div>
+        <label className="text-sm text-muted block mb-2">tags</label>
+        {tags.length === 0 ? (
+          <p className="text-sm text-muted">Aucun tag créé pour le moment.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag) => {
+              const isSelected = selectedTagIds.includes(tag.id);
+              return (
+                <button
+                  key={tag.id}
+                  type="button"
+                  onClick={() =>
+                    setSelectedTagIds((prev) =>
+                      prev.includes(tag.id)
+                        ? prev.filter((id) => id !== tag.id)
+                        : [...prev, tag.id]
+                    )
+                  }
+                  className={`text-sm px-3.5 py-1.5 rounded-full transition ${
+                    isSelected ? "bg-leaf text-cream" : "bg-surface text-foreground"
+                  }`}
+                >
+                  {tag.name.toLowerCase()}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {selectedTagIds.map((tagId) => (
+          <input key={tagId} type="hidden" name="tagIds" value={tagId} />
+        ))}
       </div>
 
       {/* Ingrédients */}

@@ -74,6 +74,19 @@ export default async function RecipePage({
         <p className="text-muted text-sm mb-6">{recipe.description}</p>
       )}
 
+      {recipe.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          {recipe.tags.map((tag) => (
+            <span
+              key={tag.id}
+              className="text-xs px-3 py-1 rounded-full bg-surface text-foreground"
+            >
+              {tag.name.toLowerCase()}
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Informations pratiques */}
       <div className="flex gap-6 text-sm text-foreground mb-10 bg-surface rounded-2xl p-4">
         <span className="flex items-center gap-1.5">
