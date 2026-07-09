@@ -26,7 +26,7 @@ export function SiteHeader() {
               key={item.href}
               href={item.href}
               className={`px-3.5 py-1.5 rounded-full transition ${
-                isActive ? "bg-leaf text-cream" : "text-foreground hover:bg-surface"
+                isActive ? "bg-leaf text-white" : "text-foreground hover:bg-surface"
               }`}
             >
               {item.label}

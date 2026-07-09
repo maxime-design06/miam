@@ -18,7 +18,7 @@ export const accentIconColor: Record<Recipe["accentColor"], string> = {
   mango: "text-cream",
   pulp: "text-[#5C3A0F]",
   kiwi: "text-[#2E3A19]",
-  leaf: "text-cream",
+  leaf: "text-white",
   honey: "text-cream",
 };
 

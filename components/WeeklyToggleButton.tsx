@@ -37,7 +37,7 @@ export function WeeklyToggleButton({
       onClick={handleClick}
       disabled={isPending}
       className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full transition disabled:opacity-60 ${
-        added ? "bg-leaf text-cream" : "text-leaf"
+        added ? "bg-leaf text-white" : "text-leaf"
       }`}
     >
       {added ? (

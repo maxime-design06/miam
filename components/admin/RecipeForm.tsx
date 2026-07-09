@@ -196,7 +196,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
                     )
                   }
                   className={`text-sm px-3.5 py-1.5 rounded-full transition ${
-                    isSelected ? "bg-leaf text-cream" : "bg-surface text-foreground"
+                    isSelected ? "bg-leaf text-white" : "bg-surface text-foreground"
                   }`}
                 >
                   {tag.name.toLowerCase()}
@@ -348,7 +348,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
 
       <button
         type="submit"
-        className="px-6 h-11 rounded-full bg-leaf text-cream text-sm font-heading font-bold"
+        className="px-6 h-11 rounded-full bg-leaf text-white text-sm font-heading font-bold"
       >
         enregistrer
       </button>

@@ -77,7 +77,7 @@ export default async function AdminPage({
         </select>
         <button
           type="submit"
-          className="h-10 px-4 rounded-full bg-leaf text-cream text-sm font-heading font-bold"
+          className="h-10 px-4 rounded-full bg-leaf text-white text-sm font-heading font-bold"
         >
           filtrer
         </button>

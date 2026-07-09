@@ -22,7 +22,7 @@ export function CategoryPills({ categories, activeSlug, searchTerm }: CategoryPi
       <Link
         href={buildHref(undefined)}
         className={`text-sm px-3.5 py-1.5 rounded-full transition ${
-          isAllActive ? "bg-leaf text-cream" : "bg-surface text-foreground hover:opacity-80"
+          isAllActive ? "bg-leaf text-white" : "bg-surface text-foreground hover:opacity-80"
         }`}
       >
         toutes
@@ -34,7 +34,7 @@ export function CategoryPills({ categories, activeSlug, searchTerm }: CategoryPi
             key={category.slug}
             href={buildHref(category.slug)}
             className={`text-sm px-3.5 py-1.5 rounded-full transition ${
-              isActive ? "bg-leaf text-cream" : "bg-surface text-foreground hover:opacity-80"
+              isActive ? "bg-leaf text-white" : "bg-surface text-foreground hover:opacity-80"
             }`}
           >
             {category.name.toLowerCase()}
