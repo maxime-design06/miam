@@ -29,6 +29,7 @@ interface RecipeFormPayload {
   title: string;
   slug: string;
   description: string;
+  sourceUrl: string | null;
   prepTimeMinutes: number;
   cookTimeMinutes: number;
   servings: number;
@@ -43,11 +44,13 @@ interface RecipeFormPayload {
 function parseRecipeForm(formData: FormData): RecipeFormPayload {
   const title = String(formData.get("title") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
+  const sourceUrlInput = String(formData.get("sourceUrl") ?? "").trim();
 
   return {
     title,
     slug: slugInput ? slugify(slugInput) : slugify(title),
     description: String(formData.get("description") ?? ""),
+    sourceUrl: sourceUrlInput || null,
     prepTimeMinutes: Number(formData.get("prepTimeMinutes") ?? 0) || 0,
     cookTimeMinutes: Number(formData.get("cookTimeMinutes") ?? 0) || 0,
     servings: Number(formData.get("servings") ?? 1) || 1,
@@ -126,6 +129,32 @@ async function saveRelatedData(
   }
 }
 
+export async function createCategory(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  if (!name) redirect("/admin/categories");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("categories").insert({ name, slug: slugify(name) });
+
+  if (error) {
+    console.error("Erreur lors de la création de la catégorie :", error.message);
+    redirect("/admin/categories?error=1");
+  }
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/categories");
+  redirect("/admin/categories");
+}
+
+export async function deleteCategory(id: string) {
+  const supabase = await createClient();
+  await supabase.from("categories").delete().eq("id", id);
+
+  revalidatePath("/admin/categories");
+  revalidatePath("/categories");
+  redirect("/admin/categories");
+}
+
 export async function createTag(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) redirect("/admin/tags");
@@ -187,6 +216,7 @@ export async function createRecipe(formData: FormData) {
       title: payload.title,
       slug: payload.slug,
       description: payload.description,
+      source_url: payload.sourceUrl,
       prep_time_minutes: payload.prepTimeMinutes,
       cook_time_minutes: payload.cookTimeMinutes,
       servings: payload.servings,
@@ -223,6 +253,7 @@ export async function updateRecipe(id: string, formData: FormData) {
       title: payload.title,
       slug: payload.slug,
       description: payload.description,
+      source_url: payload.sourceUrl,
       prep_time_minutes: payload.prepTimeMinutes,
       cook_time_minutes: payload.cookTimeMinutes,
       servings: payload.servings,

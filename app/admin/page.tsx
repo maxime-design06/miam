@@ -44,6 +44,12 @@ export default async function AdminPage({
         >
           gérer les tags
         </Link>
+        <Link
+          href="/admin/categories"
+          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-display"
+        >
+          gérer les catégories
+        </Link>
       </div>
 
       {/* Recherche et tri */}

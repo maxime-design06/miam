@@ -23,6 +23,7 @@ interface RecipeFormProps {
     slug: string;
     description: string;
     imageUrl?: string | null;
+    sourceUrl?: string | null;
     prepTimeMinutes: number;
     cookTimeMinutes: number;
     servings: number;
@@ -110,6 +111,19 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
             supprimer la photo actuelle
           </label>
         )}
+      </div>
+
+      <div>
+        <label className="text-sm text-muted block mb-1">
+          lien vers le post ou reel Instagram d&apos;origine (optionnel)
+        </label>
+        <input
+          type="url"
+          name="sourceUrl"
+          defaultValue={initial?.sourceUrl ?? ""}
+          placeholder="https://www.instagram.com/..."
+          className={inputClass}
+        />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

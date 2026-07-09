@@ -42,6 +42,7 @@ export interface RecipeEditData {
   slug: string;
   description: string;
   imageUrl: string | null;
+  sourceUrl: string | null;
   prepTimeMinutes: number;
   cookTimeMinutes: number;
   servings: number;
@@ -63,7 +64,7 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
   const { data: recipe, error } = await supabase
     .from("recipes")
     .select(
-      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
+      "id, title, slug, description, image_url, source_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
     )
     .eq("id", id)
     .maybeSingle();
@@ -100,6 +101,7 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
     slug: recipe.slug,
     description: recipe.description ?? "",
     imageUrl: recipe.image_url ?? null,
+    sourceUrl: recipe.source_url ?? null,
     prepTimeMinutes: recipe.prep_time_minutes ?? 0,
     cookTimeMinutes: recipe.cook_time_minutes ?? 0,
     servings: recipe.servings ?? 1,
@@ -149,6 +151,7 @@ export async function getCategories() {
 }
 
 export interface RecipeDetail extends Recipe {
+  sourceUrl: string | null;
   ingredients: { id: string; name: string; quantity: number | null; unit: string | null }[];
   steps: { id: string; stepNumber: number; description: string }[];
   tips: { id: string; tip: string }[];
@@ -166,7 +169,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
   const { data: recipe, error: recipeError } = await supabase
     .from("recipes")
     .select(
-      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
+      "id, title, slug, description, image_url, source_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -219,6 +222,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
     slug: recipe.slug,
     description: recipe.description ?? "",
     imageUrl: recipe.image_url ?? null,
+    sourceUrl: recipe.source_url ?? null,
     prepTimeMinutes: recipe.prep_time_minutes ?? 0,
     cookTimeMinutes: recipe.cook_time_minutes ?? 0,
     servings: recipe.servings ?? 1,

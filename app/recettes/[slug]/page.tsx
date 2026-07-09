@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil } from "lucide-react";
+import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil, ExternalLink } from "lucide-react";
 import { getRecipeBySlug, isLoggedIn } from "@/lib/recipes";
 import { accentBg, accentIconColor } from "@/components/RecipeCard";
 import type { Recipe } from "@/types/recipe";
@@ -95,6 +95,18 @@ export default async function RecipePage({
             </span>
           ))}
         </div>
+      )}
+
+      {recipe.sourceUrl && (
+        <a
+          href={recipe.sourceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-sm text-leaf mb-6"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          voir la publication d&apos;origine
+        </a>
       )}
 
       {/* Informations pratiques */}
