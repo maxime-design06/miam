@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil, ExternalLink, CalendarPlus, CalendarMinus } from "lucide-react";
+import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { getRecipeBySlug, isLoggedIn } from "@/lib/recipes";
 import { getWeeklyEntryForRecipe } from "@/lib/weekly";
-import { addToWeeklyList, removeFromWeeklyList } from "@/app/semaine/actions";
+import { WeeklyToggleButton } from "@/components/WeeklyToggleButton";
 import { accentBg, accentIconColor } from "@/components/RecipeCard";
 import type { Recipe } from "@/types/recipe";
 
@@ -77,27 +78,11 @@ export default async function RecipePage({
         <h1 className="font-display text-3xl text-foreground">{recipe.title}</h1>
         {loggedIn && (
           <div className="flex items-center gap-4 shrink-0 mt-2">
-            {weeklyEntry ? (
-              <form action={removeFromWeeklyList.bind(null, weeklyEntry.id, recipe.slug)}>
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 text-sm text-papaya"
-                >
-                  <CalendarMinus className="w-3.5 h-3.5" />
-                  retirer de la semaine
-                </button>
-              </form>
-            ) : (
-              <form action={addToWeeklyList.bind(null, recipe.id, recipe.slug)}>
-                <button
-                  type="submit"
-                  className="flex items-center gap-1.5 text-sm text-leaf"
-                >
-                  <CalendarPlus className="w-3.5 h-3.5" />
-                  ajouter à la semaine
-                </button>
-              </form>
-            )}
+            <WeeklyToggleButton
+              recipeId={recipe.id}
+              slug={recipe.slug}
+              initialEntryId={weeklyEntry?.id ?? null}
+            />
             <Link
               href={`/admin/recettes/${recipe.id}`}
               className="flex items-center gap-1.5 text-sm text-leaf"

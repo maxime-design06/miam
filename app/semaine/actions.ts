@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-export async function addToWeeklyList(recipeId: string, slug: string) {
+export async function addToWeeklyList(recipeId: string, slug: string): Promise<string> {
   const supabase = await createClient();
 
   const { data: existing } = await supabase
@@ -12,12 +12,29 @@ export async function addToWeeklyList(recipeId: string, slug: string) {
     .eq("recipe_id", recipeId)
     .maybeSingle();
 
-  if (!existing) {
-    await supabase.from("weekly_recipes").insert({ recipe_id: recipeId });
+  let entryId = existing?.id as string | undefined;
+
+  if (!entryId) {
+    const { data: inserted, error } = await supabase
+      .from("weekly_recipes")
+      .insert({ recipe_id: recipeId })
+      .select("id")
+      .single();
+
+    if (error || !inserted) {
+      throw new Error(error?.message ?? "Impossible d'ajouter la recette.");
+    }
+    entryId = inserted.id;
   }
 
   revalidatePath("/semaine");
   revalidatePath(`/recettes/${slug}`);
+
+  if (!entryId) {
+    throw new Error("Impossible de déterminer l'identifiant de la recette ajoutée.");
+  }
+
+  return entryId;
 }
 
 export async function removeFromWeeklyList(id: string, slug: string) {
