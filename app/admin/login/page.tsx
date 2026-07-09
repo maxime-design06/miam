@@ -34,7 +34,7 @@ export default async function LoginPage({
           type="submit"
           className="w-full h-10 rounded-full bg-leaf text-white text-sm font-heading font-bold"
         >
-          se connecter
+          Se connecter
         </button>
       </form>
     </main>

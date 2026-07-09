@@ -79,7 +79,7 @@ export default async function RecipePage({
               className="flex items-center gap-1.5 text-sm text-leaf"
             >
               <Pencil className="w-3.5 h-3.5" />
-              modifier
+              Modifier
             </Link>
           </div>
         )}
@@ -109,7 +109,7 @@ export default async function RecipePage({
           className="inline-flex items-center gap-1.5 text-sm text-leaf mb-6"
         >
           <ExternalLink className="w-3.5 h-3.5" />
-          voir la publication d&apos;origine
+          Voir la publication d&apos;origine
         </a>
       )}
 
@@ -130,7 +130,7 @@ export default async function RecipePage({
         {/* Ingrédients */}
         <section>
           <h2 className="font-heading font-bold text-lg text-foreground mb-4">
-            ingrédients
+            Ingrédients
           </h2>
           {recipe.ingredients.length === 0 ? (
             <p className="text-muted text-sm">Aucun ingrédient renseigné.</p>
@@ -149,7 +149,7 @@ export default async function RecipePage({
         {/* Étapes */}
         <section>
           <h2 className="font-heading font-bold text-lg text-foreground mb-4">
-            préparation
+            Préparation
           </h2>
           {recipe.steps.length === 0 ? (
             <p className="text-muted text-sm">Aucune étape renseignée.</p>
@@ -172,7 +172,7 @@ export default async function RecipePage({
       {recipe.tips.length > 0 && (
         <section className="mt-10 bg-surface rounded-2xl p-5">
           <h2 className="font-heading font-bold text-lg text-foreground mb-3">
-            conseils
+            Conseils
           </h2>
           <ul className="space-y-2 text-sm text-foreground">
             {recipe.tips.map((tip) => (

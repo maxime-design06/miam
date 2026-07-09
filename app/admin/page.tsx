@@ -22,10 +22,10 @@ export default async function AdminPage({
       <header className="flex items-center justify-between mb-8">
         <h1 className="font-display text-2xl text-papaya">miam admin</h1>
         <div className="flex items-center gap-4 text-sm text-foreground">
-          <Link href="/">voir le site</Link>
+          <Link href="/">Voir le site</Link>
           <form action={signOut}>
             <button type="submit" className="text-muted">
-              se déconnecter
+              Se déconnecter
             </button>
           </form>
         </div>
@@ -36,19 +36,19 @@ export default async function AdminPage({
           href="/admin/recettes/nouvelle"
           className="inline-block px-4 py-2 rounded-full bg-papaya text-cream text-sm font-heading font-bold"
         >
-          + ajouter une recette
+          + Ajouter une recette
         </Link>
         <Link
           href="/admin/tags"
           className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-heading font-bold"
         >
-          gérer les tags
+          Gérer les tags
         </Link>
         <Link
           href="/admin/categories"
           className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-heading font-bold"
         >
-          gérer les catégories
+          Gérer les catégories
         </Link>
       </div>
 
@@ -95,11 +95,11 @@ export default async function AdminPage({
               <span className="text-sm text-foreground">{recipe.title}</span>
               <div className="flex items-center gap-4 text-sm">
                 <Link href={`/admin/recettes/${recipe.id}`} className="text-leaf">
-                  modifier
+                  Modifier
                 </Link>
                 <form action={deleteRecipe.bind(null, recipe.id)}>
                   <button type="submit" className="text-papaya">
-                    supprimer
+                    Supprimer
                   </button>
                 </form>
               </div>

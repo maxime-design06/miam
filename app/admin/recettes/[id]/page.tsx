@@ -21,7 +21,7 @@ export default async function EditRecipePage({
 
   return (
     <main className="max-w-3xl w-full mx-auto px-6 py-8">
-      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">modifier la recette</h1>
+      <h1 className="font-heading font-bold text-2xl text-foreground mb-6">Modifier la recette</h1>
       <RecipeForm
         action={updateRecipe.bind(null, id)}
         categories={categories}
@@ -31,7 +31,7 @@ export default async function EditRecipePage({
 
       <form action={deleteRecipe.bind(null, id)} className="mt-8 pt-6 border-t border-surface">
         <button type="submit" className="text-sm text-papaya">
-          supprimer cette recette
+          Supprimer cette recette
         </button>
       </form>
     </main>

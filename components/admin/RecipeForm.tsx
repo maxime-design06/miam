@@ -266,7 +266,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
           onClick={() => setIngredients((prev) => [...prev, { name: "", quantity: null, unit: "" }])}
           className="mt-2 text-sm text-leaf"
         >
-          + ajouter un ingrédient
+          + Ajouter un ingrédient
         </button>
       </div>
 
@@ -304,7 +304,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
           onClick={() => setSteps((prev) => [...prev, { description: "" }])}
           className="mt-2 text-sm text-leaf"
         >
-          + ajouter une étape
+          + Ajouter une étape
         </button>
       </div>
 
@@ -338,7 +338,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
           onClick={() => setTips((prev) => [...prev, { tip: "" }])}
           className="mt-2 text-sm text-leaf"
         >
-          + ajouter un conseil
+          + Ajouter un conseil
         </button>
       </div>
 
@@ -350,7 +350,7 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
         type="submit"
         className="px-6 h-11 rounded-full bg-leaf text-white text-sm font-heading font-bold"
       >
-        enregistrer
+        Enregistrer
       </button>
     </form>
   );

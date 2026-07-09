@@ -21,7 +21,7 @@ export default async function RecettesPage({
       <SiteHeader />
 
       <h1 className="font-heading font-bold text-2xl text-foreground mb-6">
-        toutes les recettes
+        Toutes les recettes
       </h1>
 
       <form method="get" action="/recettes" className="max-w-md relative mb-6">

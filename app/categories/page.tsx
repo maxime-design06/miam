@@ -9,7 +9,7 @@ export default async function CategoriesPage() {
       <SiteHeader />
 
       <h1 className="font-heading font-bold text-2xl text-foreground mb-6">
-        catégories
+        Catégories
       </h1>
 
       {categories.length === 0 ? (

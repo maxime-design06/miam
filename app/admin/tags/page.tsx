@@ -13,9 +13,9 @@ export default async function TagsPage({
   return (
     <main className="max-w-lg w-full mx-auto px-6 py-8">
       <header className="flex items-center justify-between mb-8">
-        <h1 className="font-heading font-bold text-2xl text-papaya">tags</h1>
+        <h1 className="font-heading font-bold text-2xl text-papaya">Tags</h1>
         <Link href="/admin" className="text-sm text-foreground">
-          ← retour
+          ← Retour
         </Link>
       </header>
 
@@ -31,7 +31,7 @@ export default async function TagsPage({
           type="submit"
           className="h-10 px-4 rounded-full bg-leaf text-white text-sm font-heading font-bold"
         >
-          ajouter
+          Ajouter
         </button>
       </form>
 
@@ -53,7 +53,7 @@ export default async function TagsPage({
               <span className="text-sm text-foreground">{tag.name}</span>
               <form action={deleteTag.bind(null, tag.id)}>
                 <button type="submit" className="text-sm text-papaya">
-                  supprimer
+                  Supprimer
                 </button>
               </form>
             </li>

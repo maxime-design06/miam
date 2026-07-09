@@ -6,9 +6,9 @@ import { AutoSubmitCheckbox } from "@/components/AutoSubmitCheckbox";
 import { SiteHeader } from "@/components/SiteHeader";
 
 const statusFields = [
-  { field: "isCooked" as const, key: "is_cooked" as const, label: "cuisinée" },
-  { field: "isEaten" as const, key: "is_eaten" as const, label: "mangée" },
-  { field: "hasLeftovers" as const, key: "has_leftovers" as const, label: "restes" },
+  { field: "isCooked" as const, key: "is_cooked" as const, label: "Cuisinée" },
+  { field: "isEaten" as const, key: "is_eaten" as const, label: "Mangée" },
+  { field: "hasLeftovers" as const, key: "has_leftovers" as const, label: "Restes" },
 ];
 
 export default async function SemainePage() {
@@ -19,7 +19,7 @@ export default async function SemainePage() {
       <SiteHeader />
 
       <div className="flex items-center justify-between mb-6">
-        <h1 className="font-heading font-bold text-2xl text-foreground">cette semaine</h1>
+        <h1 className="font-heading font-bold text-2xl text-foreground">Cette semaine</h1>
         <span className="text-sm text-muted">
           {entries.length} recette{entries.length > 1 ? "s" : ""}
         </span>
@@ -28,7 +28,7 @@ export default async function SemainePage() {
       {loggedIn && entries.length > 0 && (
         <form action={clearWeeklyList} className="mb-6">
           <button type="submit" className="text-sm text-papaya">
-            vider la liste
+            Vider la liste
           </button>
         </form>
       )}
@@ -85,7 +85,7 @@ export default async function SemainePage() {
               {loggedIn && (
                 <form action={removeFromWeeklyList.bind(null, entry.id, entry.slug)}>
                   <button type="submit" className="text-xs text-papaya">
-                    retirer
+                    Retirer
                   </button>
                 </form>
               )}

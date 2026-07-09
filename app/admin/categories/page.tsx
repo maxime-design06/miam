@@ -13,9 +13,9 @@ export default async function AdminCategoriesPage({
   return (
     <main className="max-w-lg w-full mx-auto px-6 py-8">
       <header className="flex items-center justify-between mb-8">
-        <h1 className="font-heading font-bold text-2xl text-papaya">catégories</h1>
+        <h1 className="font-heading font-bold text-2xl text-papaya">Catégories</h1>
         <Link href="/admin" className="text-sm text-foreground">
-          ← retour
+          ← Retour
         </Link>
       </header>
 
@@ -31,7 +31,7 @@ export default async function AdminCategoriesPage({
           type="submit"
           className="h-10 px-4 rounded-full bg-leaf text-white text-sm font-heading font-bold"
         >
-          ajouter
+          Ajouter
         </button>
       </form>
 
@@ -53,7 +53,7 @@ export default async function AdminCategoriesPage({
               <span className="text-sm text-foreground">{category.name}</span>
               <form action={deleteCategory.bind(null, category.id)}>
                 <button type="submit" className="text-sm text-papaya">
-                  supprimer
+                  Supprimer
                 </button>
               </form>
             </li>
