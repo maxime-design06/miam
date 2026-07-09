@@ -47,13 +47,23 @@ export default async function RecipePage({
       </header>
 
       {/* Bandeau visuel */}
-      <div
-        className={`h-40 rounded-2xl flex items-center justify-center mb-6 ${
-          accentBg[recipe.accentColor as Recipe["accentColor"]]
-        }`}
-      >
-        <Icon className={`w-12 h-12 ${accentIconColor[recipe.accentColor as Recipe["accentColor"]]}`} />
-      </div>
+      {recipe.imageUrl ? (
+        <img
+          src={recipe.imageUrl}
+          alt={recipe.title}
+          className="w-full h-64 object-cover rounded-2xl mb-6"
+        />
+      ) : (
+        <div
+          className={`h-40 rounded-2xl flex items-center justify-center mb-6 ${
+            accentBg[recipe.accentColor as Recipe["accentColor"]]
+          }`}
+        >
+          <Icon
+            className={`w-12 h-12 ${accentIconColor[recipe.accentColor as Recipe["accentColor"]]}`}
+          />
+        </div>
+      )}
 
       <p className="text-xs text-muted uppercase tracking-wide mb-2">
         {recipe.category}

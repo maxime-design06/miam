@@ -150,6 +150,33 @@ export async function deleteTag(id: string) {
   redirect("/admin/tags");
 }
 
+/**
+ * Envoie l'image choisie vers Supabase Storage et renvoie son URL publique.
+ * Renvoie null si aucun fichier n'a été sélectionné.
+ */
+async function uploadRecipeImage(
+  supabase: SupabaseServerClient,
+  recipeId: string,
+  file: File | null
+): Promise<string | null> {
+  if (!file || file.size === 0) return null;
+
+  const extension = file.name.split(".").pop() || "jpg";
+  const path = `${recipeId}-${Date.now()}.${extension}`;
+
+  const { error } = await supabase.storage
+    .from("recipe-images")
+    .upload(path, file, { contentType: file.type, upsert: true });
+
+  if (error) {
+    console.error("Erreur lors de l'envoi de l'image :", error.message);
+    return null;
+  }
+
+  const { data } = supabase.storage.from("recipe-images").getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export async function createRecipe(formData: FormData) {
   const supabase = await createClient();
   const payload = parseRecipeForm(formData);
@@ -174,6 +201,12 @@ export async function createRecipe(formData: FormData) {
   }
 
   await saveRelatedData(supabase, recipe.id, payload);
+
+  const imageFile = formData.get("image") as File | null;
+  const imageUrl = await uploadRecipeImage(supabase, recipe.id, imageFile);
+  if (imageUrl) {
+    await supabase.from("recipes").update({ image_url: imageUrl }).eq("id", recipe.id);
+  }
 
   revalidatePath("/");
   revalidatePath("/recettes");
@@ -203,6 +236,16 @@ export async function updateRecipe(id: string, formData: FormData) {
   }
 
   await saveRelatedData(supabase, id, payload);
+
+  const imageFile = formData.get("image") as File | null;
+  const removeImage = formData.get("removeImage") === "on";
+  const newImageUrl = await uploadRecipeImage(supabase, id, imageFile);
+
+  if (newImageUrl) {
+    await supabase.from("recipes").update({ image_url: newImageUrl }).eq("id", id);
+  } else if (removeImage) {
+    await supabase.from("recipes").update({ image_url: null }).eq("id", id);
+  }
 
   revalidatePath("/");
   revalidatePath("/recettes");

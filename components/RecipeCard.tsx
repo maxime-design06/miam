@@ -38,11 +38,20 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       href={`/recettes/${recipe.slug}`}
       className="block bg-surface rounded-2xl overflow-hidden hover:opacity-90 transition"
     >
-      <div
-        className={`h-24 flex items-center justify-center ${accentBg[recipe.accentColor]}`}
-      >
-        <Icon className={`w-7 h-7 ${accentIconColor[recipe.accentColor]}`} />
-      </div>
+      {recipe.imageUrl ? (
+        <img
+          src={recipe.imageUrl}
+          alt={recipe.title}
+          className="h-24 w-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        <div
+          className={`h-24 flex items-center justify-center ${accentBg[recipe.accentColor]}`}
+        >
+          <Icon className={`w-7 h-7 ${accentIconColor[recipe.accentColor]}`} />
+        </div>
+      )}
       <div className="p-3">
         <p className="font-display text-sm text-foreground mb-1.5">
           {recipe.title}

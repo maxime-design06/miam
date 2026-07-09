@@ -14,6 +14,7 @@ type RecipeRow = {
   title: string;
   slug: string;
   description: string | null;
+  image_url: string | null;
   prep_time_minutes: number | null;
   cook_time_minutes: number | null;
   servings: number | null;
@@ -40,6 +41,7 @@ export interface RecipeEditData {
   title: string;
   slug: string;
   description: string;
+  imageUrl: string | null;
   prepTimeMinutes: number;
   cookTimeMinutes: number;
   servings: number;
@@ -61,7 +63,7 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
   const { data: recipe, error } = await supabase
     .from("recipes")
     .select(
-      "id, title, slug, description, prep_time_minutes, cook_time_minutes, servings, difficulty"
+      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
     )
     .eq("id", id)
     .maybeSingle();
@@ -97,6 +99,7 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
     title: recipe.title,
     slug: recipe.slug,
     description: recipe.description ?? "",
+    imageUrl: recipe.image_url ?? null,
     prepTimeMinutes: recipe.prep_time_minutes ?? 0,
     cookTimeMinutes: recipe.cook_time_minutes ?? 0,
     servings: recipe.servings ?? 1,
@@ -163,7 +166,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
   const { data: recipe, error: recipeError } = await supabase
     .from("recipes")
     .select(
-      "id, title, slug, description, prep_time_minutes, cook_time_minutes, servings, difficulty"
+      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
     )
     .eq("slug", slug)
     .maybeSingle();
@@ -215,6 +218,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
     title: recipe.title,
     slug: recipe.slug,
     description: recipe.description ?? "",
+    imageUrl: recipe.image_url ?? null,
     prepTimeMinutes: recipe.prep_time_minutes ?? 0,
     cookTimeMinutes: recipe.cook_time_minutes ?? 0,
     servings: recipe.servings ?? 1,
@@ -272,7 +276,7 @@ export async function getRecipes(filters?: {
   let query = supabase
     .from("recipes")
     .select(
-      "id, title, slug, description, prep_time_minutes, cook_time_minutes, servings, difficulty"
+      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty"
     );
 
   const term = filters?.search?.trim();
@@ -323,6 +327,7 @@ export async function getRecipes(filters?: {
       title: row.title,
       slug: row.slug,
       description: row.description ?? "",
+      imageUrl: row.image_url ?? null,
       prepTimeMinutes: row.prep_time_minutes ?? 0,
       cookTimeMinutes: row.cook_time_minutes ?? 0,
       servings: row.servings ?? 1,

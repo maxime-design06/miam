@@ -22,6 +22,7 @@ interface RecipeFormProps {
     title: string;
     slug: string;
     description: string;
+    imageUrl?: string | null;
     prepTimeMinutes: number;
     cookTimeMinutes: number;
     servings: number;
@@ -39,6 +40,8 @@ const inputClass =
 
 export function RecipeForm({ action, categories, tags, initial }: RecipeFormProps) {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initial?.tagIds ?? []);
+  const [imagePreview, setImagePreview] = useState<string | null>(initial?.imageUrl ?? null);
+  const [removeImage, setRemoveImage] = useState(false);
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     initial?.ingredients?.length ? initial.ingredients : [{ name: "", quantity: null, unit: "" }]
   );
@@ -70,6 +73,43 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
           rows={3}
           className="w-full px-4 py-3 rounded-2xl bg-surface text-sm outline-none text-foreground"
         />
+      </div>
+
+      <div>
+        <label className="text-sm text-muted block mb-2">photo</label>
+        {imagePreview && !removeImage && (
+          <div className="mb-3">
+            <img
+              src={imagePreview}
+              alt="Aperçu"
+              className="w-40 h-28 object-cover rounded-2xl"
+            />
+          </div>
+        )}
+        <input
+          type="file"
+          name="image"
+          accept="image/*"
+          onChange={(e) => {
+            const file = e.target.files?.[0];
+            if (file) {
+              setImagePreview(URL.createObjectURL(file));
+              setRemoveImage(false);
+            }
+          }}
+          className="text-sm text-foreground"
+        />
+        {initial?.imageUrl && (
+          <label className="flex items-center gap-2 text-sm text-muted mt-2">
+            <input
+              type="checkbox"
+              name="removeImage"
+              checked={removeImage}
+              onChange={(e) => setRemoveImage(e.target.checked)}
+            />
+            supprimer la photo actuelle
+          </label>
+        )}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
