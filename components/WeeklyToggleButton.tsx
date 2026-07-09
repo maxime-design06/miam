@@ -17,35 +17,45 @@ export function WeeklyToggleButton({
 }: WeeklyToggleButtonProps) {
   const [entryId, setEntryId] = useState<string | null>(initialEntryId);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState(false);
   const added = Boolean(entryId);
 
   function handleClick() {
+    setError(false);
     startTransition(async () => {
-      if (entryId) {
-        await removeFromWeeklyList(entryId, slug);
-        setEntryId(null);
-      } else {
-        const newId = await addToWeeklyList(recipeId, slug);
-        setEntryId(newId);
+      try {
+        if (entryId) {
+          await removeFromWeeklyList(entryId, slug);
+          setEntryId(null);
+        } else {
+          const newId = await addToWeeklyList(recipeId, slug);
+          setEntryId(newId);
+        }
+      } catch {
+        setError(true);
+        setTimeout(() => setError(false), 4000);
       }
     });
   }
 
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={isPending}
-      className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full transition disabled:opacity-60 ${
-        added ? "bg-leaf text-white" : "text-leaf"
-      }`}
-    >
-      {added ? (
-        <Check className="w-3.5 h-3.5" />
-      ) : (
-        <CalendarPlus className="w-3.5 h-3.5" />
-      )}
-      Menu de la semaine
-    </button>
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isPending}
+        className={`flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full transition disabled:opacity-60 ${
+          added ? "bg-leaf text-white" : "text-leaf"
+        }`}
+      >
+        {added ? (
+          <Check className="w-3.5 h-3.5" />
+        ) : (
+          <CalendarPlus className="w-3.5 h-3.5" />
+        )}
+        Menu de la semaine
+      </button>
+      {error && <span className="text-xs text-papaya">Erreur, réessaie</span>}
+    </div>
   );
 }

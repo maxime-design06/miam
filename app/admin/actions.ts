@@ -148,7 +148,12 @@ export async function createCategory(formData: FormData) {
 
 export async function deleteCategory(id: string) {
   const supabase = await createClient();
-  await supabase.from("categories").delete().eq("id", id);
+  const { error } = await supabase.from("categories").delete().eq("id", id);
+
+  if (error) {
+    console.error("Erreur lors de la suppression de la catégorie :", error.message);
+    redirect("/admin/categories?error=1");
+  }
 
   revalidatePath("/admin/categories");
   revalidatePath("/categories");
@@ -173,7 +178,12 @@ export async function createTag(formData: FormData) {
 
 export async function deleteTag(id: string) {
   const supabase = await createClient();
-  await supabase.from("tags").delete().eq("id", id);
+  const { error } = await supabase.from("tags").delete().eq("id", id);
+
+  if (error) {
+    console.error("Erreur lors de la suppression du tag :", error.message);
+    redirect("/admin/tags?error=1");
+  }
 
   revalidatePath("/admin/tags");
   redirect("/admin/tags");
@@ -286,7 +296,12 @@ export async function updateRecipe(id: string, formData: FormData) {
 
 export async function deleteRecipe(id: string) {
   const supabase = await createClient();
-  await supabase.from("recipes").delete().eq("id", id);
+  const { error } = await supabase.from("recipes").delete().eq("id", id);
+
+  if (error) {
+    console.error("Erreur lors de la suppression de la recette :", error.message);
+    redirect("/admin?error=1");
+  }
 
   revalidatePath("/");
   revalidatePath("/recettes");

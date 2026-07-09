@@ -252,6 +252,123 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
  * Fait en deux requêtes simples plutôt qu'une seule requête avec
  * une jointure imbriquée sur deux niveaux, plus fiable avec Supabase.
  */
+export interface PaginatedRecipes {
+  recipes: Recipe[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/**
+ * Comme getRecipes, mais découpée en pages : renvoie seulement
+ * `pageSize` recettes pour la page demandée, plus le nombre total
+ * de recettes correspondant aux filtres (pour afficher "page 2/8").
+ * Utilisée par le catalogue, qui doit rester rapide même avec
+ * beaucoup de recettes.
+ */
+export async function getRecipesPaginated(filters?: {
+  search?: string;
+  categorySlug?: string;
+  sort?: "recent" | "oldest" | "alpha";
+  page?: number;
+  pageSize?: number;
+}): Promise<PaginatedRecipes> {
+  const supabase = await createClient();
+  const page = Math.max(1, filters?.page ?? 1);
+  const pageSize = filters?.pageSize ?? 24;
+
+  let recipeIdFilter: string[] | null = null;
+  if (filters?.categorySlug) {
+    const { data: links, error: linksError } = await supabase
+      .from("recipe_categories")
+      .select("recipe_id, categories!inner ( slug )")
+      .eq("categories.slug", filters.categorySlug);
+
+    if (linksError) {
+      console.error("Erreur lors du filtrage par catégorie :", linksError.message);
+      return { recipes: [], total: 0, page: 1, pageSize, totalPages: 1 };
+    }
+
+    recipeIdFilter = (links ?? []).map((link) => link.recipe_id);
+    if (recipeIdFilter.length === 0) {
+      return { recipes: [], total: 0, page: 1, pageSize, totalPages: 1 };
+    }
+  }
+
+  let query = supabase
+    .from("recipes")
+    .select(
+      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty",
+      { count: "exact" }
+    );
+
+  const term = filters?.search?.trim();
+  if (term) {
+    const escaped = term.replace(/[%_]/g, "");
+    query = query.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`);
+  }
+
+  if (recipeIdFilter) {
+    query = query.in("id", recipeIdFilter);
+  }
+
+  const sort = filters?.sort ?? "recent";
+  query =
+    sort === "alpha"
+      ? query.order("title", { ascending: true })
+      : query.order("created_at", { ascending: sort === "oldest" });
+
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const { data: recipeRows, error: recipesError, count } = await query.range(from, to);
+
+  if (recipesError) {
+    console.error("Erreur lors de la récupération des recettes :", recipesError.message);
+    return { recipes: [], total: 0, page: 1, pageSize, totalPages: 1 };
+  }
+
+  const { data: categoryLinks } = await supabase
+    .from("recipe_categories")
+    .select("recipe_id, categories ( name )");
+
+  const categoryByRecipeId = new Map<string, string>();
+  for (const link of (categoryLinks as CategoryLinkRow[] | null) ?? []) {
+    const categoryEntry = Array.isArray(link.categories) ? link.categories[0] : link.categories;
+    if (categoryEntry?.name) {
+      categoryByRecipeId.set(link.recipe_id, categoryEntry.name);
+    }
+  }
+
+  const recipes = ((recipeRows as RecipeRow[]) ?? []).map((row) => {
+    const category = categoryByRecipeId.get(row.id) ?? "Plats";
+    return {
+      id: row.id,
+      title: row.title,
+      slug: row.slug,
+      description: row.description ?? "",
+      imageUrl: row.image_url ?? null,
+      prepTimeMinutes: row.prep_time_minutes ?? 0,
+      cookTimeMinutes: row.cook_time_minutes ?? 0,
+      servings: row.servings ?? 1,
+      difficulty: row.difficulty ?? "facile",
+      category,
+      accentColor: categoryAccent[category] ?? "kiwi",
+    };
+  });
+
+  const total = count ?? recipes.length;
+
+  return {
+    recipes,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.max(1, Math.ceil(total / pageSize)),
+  };
+}
+
 export async function getRecipes(filters?: {
   search?: string;
   categorySlug?: string;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Search } from "lucide-react";
 import { getRecipes } from "@/lib/recipes";
 import { signOut, deleteRecipe } from "@/app/admin/actions";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 
 const sortOptions = [
   { value: "recent", label: "plus récentes" },
@@ -12,9 +13,9 @@ const sortOptions = [
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; sort?: "recent" | "oldest" | "alpha" }>;
+  searchParams: Promise<{ q?: string; sort?: "recent" | "oldest" | "alpha"; error?: string }>;
 }) {
-  const { q, sort } = await searchParams;
+  const { q, sort, error } = await searchParams;
   const recipes = await getRecipes({ search: q, sort: sort ?? "recent" });
 
   return (
@@ -30,6 +31,12 @@ export default async function AdminPage({
           </form>
         </div>
       </header>
+
+      {error && (
+        <p className="text-sm text-papaya mb-4">
+          Une erreur est survenue, l&apos;action n&apos;a pas pu être effectuée. Réessaie.
+        </p>
+      )}
 
       <div className="flex gap-3 mb-6">
         <Link
@@ -79,7 +86,7 @@ export default async function AdminPage({
           type="submit"
           className="h-10 px-4 rounded-full bg-leaf text-white text-sm font-heading font-bold"
         >
-          filtrer
+          Filtrer
         </button>
       </form>
 
@@ -98,9 +105,10 @@ export default async function AdminPage({
                   Modifier
                 </Link>
                 <form action={deleteRecipe.bind(null, recipe.id)}>
-                  <button type="submit" className="text-papaya">
-                    Supprimer
-                  </button>
+                  <ConfirmDeleteButton
+                    className="text-papaya"
+                    confirmMessage={`Supprimer définitivement "${recipe.title}" ? Cette action est irréversible.`}
+                  />
                 </form>
               </div>
             </li>

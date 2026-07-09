@@ -1,11 +1,15 @@
+import Link from "next/link";
 import { Search } from "lucide-react";
 import { RecipeCard } from "@/components/RecipeCard";
 import { CategoryPills } from "@/components/CategoryPills";
 import { SiteHeader } from "@/components/SiteHeader";
-import { getRecipes, getCategories } from "@/lib/recipes";
+import { getRecipesPaginated, getCategories } from "@/lib/recipes";
 
 export default async function Home() {
-  const [recipes, categories] = await Promise.all([getRecipes(), getCategories()]);
+  const [{ recipes }, categories] = await Promise.all([
+    getRecipesPaginated({ pageSize: 8 }),
+    getCategories(),
+  ]);
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 py-8">
@@ -13,7 +17,7 @@ export default async function Home() {
 
       {/* Hero + recherche (redirige vers le catalogue avec le résultat) */}
       <section className="text-center py-6 mb-10">
-        <h1 className="font-display text-2xl sm:text-3xl md:text-4xl text-foreground mb-3 leading-relaxed whitespace-nowrap">
+        <h1 className="font-display text-xl sm:text-3xl md:text-4xl text-foreground mb-3 leading-relaxed sm:whitespace-nowrap">
           on cuisine quoi aujourd&apos;hui ?
         </h1>
         <p className="text-muted text-sm mb-6">
@@ -34,11 +38,17 @@ export default async function Home() {
       <CategoryPills categories={categories} />
 
       {/* Grille de recettes */}
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {recipes.map((recipe) => (
           <RecipeCard key={recipe.id} recipe={recipe} />
         ))}
       </section>
+
+      <div className="text-center">
+        <Link href="/recettes" className="text-sm text-leaf">
+          Voir toutes les recettes →
+        </Link>
+      </div>
     </main>
   );
 }

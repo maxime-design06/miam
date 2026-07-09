@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getTags } from "@/lib/recipes";
 import { createTag, deleteTag } from "@/app/admin/actions";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 
 export default async function TagsPage({
   searchParams,
@@ -52,9 +53,10 @@ export default async function TagsPage({
             >
               <span className="text-sm text-foreground">{tag.name}</span>
               <form action={deleteTag.bind(null, tag.id)}>
-                <button type="submit" className="text-sm text-papaya">
-                  Supprimer
-                </button>
+                <ConfirmDeleteButton
+                  className="text-sm text-papaya"
+                  confirmMessage={`Supprimer le tag "${tag.name}" ? Il sera retiré de toutes les recettes qui l'utilisent.`}
+                />
               </form>
             </li>
           ))}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCategories } from "@/lib/recipes";
 import { createCategory, deleteCategory } from "@/app/admin/actions";
+import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 
 export default async function AdminCategoriesPage({
   searchParams,
@@ -52,9 +53,10 @@ export default async function AdminCategoriesPage({
             >
               <span className="text-sm text-foreground">{category.name}</span>
               <form action={deleteCategory.bind(null, category.id)}>
-                <button type="submit" className="text-sm text-papaya">
-                  Supprimer
-                </button>
+                <ConfirmDeleteButton
+                  className="text-sm text-papaya"
+                  confirmMessage={`Supprimer la catégorie "${category.name}" ? Les recettes concernées n'auront plus de catégorie.`}
+                />
               </form>
             </li>
           ))}
