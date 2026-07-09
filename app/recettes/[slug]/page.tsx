@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil, ExternalLink } from "lucide-react";
+import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil, ExternalLink, CalendarPlus, CalendarMinus } from "lucide-react";
 import { getRecipeBySlug, isLoggedIn } from "@/lib/recipes";
+import { getWeeklyEntryForRecipe } from "@/lib/weekly";
+import { addToWeeklyList, removeFromWeeklyList } from "@/app/semaine/actions";
 import { accentBg, accentIconColor } from "@/components/RecipeCard";
 import type { Recipe } from "@/types/recipe";
 
@@ -30,6 +32,8 @@ export default async function RecipePage({
     notFound();
   }
 
+  const weeklyEntry = loggedIn ? await getWeeklyEntryForRecipe(recipe.id) : null;
+
   const Icon = categoryIcon[recipe.category] ?? ChefHat;
   const totalTime = recipe.prepTimeMinutes + recipe.cookTimeMinutes;
 
@@ -42,6 +46,7 @@ export default async function RecipePage({
         <nav className="flex items-center gap-5 text-sm text-foreground">
           <a href="/recettes">Recettes</a>
           <a href="/categories">Catégories</a>
+          <a href="/semaine">Cette semaine</a>
           <a href="/admin"><User className="w-4 h-4" /></a>
         </nav>
       </header>
@@ -71,13 +76,36 @@ export default async function RecipePage({
       <div className="flex items-start justify-between gap-4 mb-3">
         <h1 className="font-display text-3xl text-foreground">{recipe.title}</h1>
         {loggedIn && (
-          <Link
-            href={`/admin/recettes/${recipe.id}`}
-            className="flex items-center gap-1.5 text-sm text-leaf shrink-0 mt-2"
-          >
-            <Pencil className="w-3.5 h-3.5" />
-            modifier
-          </Link>
+          <div className="flex items-center gap-4 shrink-0 mt-2">
+            {weeklyEntry ? (
+              <form action={removeFromWeeklyList.bind(null, weeklyEntry.id, recipe.slug)}>
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 text-sm text-papaya"
+                >
+                  <CalendarMinus className="w-3.5 h-3.5" />
+                  retirer de la semaine
+                </button>
+              </form>
+            ) : (
+              <form action={addToWeeklyList.bind(null, recipe.id, recipe.slug)}>
+                <button
+                  type="submit"
+                  className="flex items-center gap-1.5 text-sm text-leaf"
+                >
+                  <CalendarPlus className="w-3.5 h-3.5" />
+                  ajouter à la semaine
+                </button>
+              </form>
+            )}
+            <Link
+              href={`/admin/recettes/${recipe.id}`}
+              className="flex items-center gap-1.5 text-sm text-leaf"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              modifier
+            </Link>
+          </div>
         )}
       </div>
       {recipe.description && (
