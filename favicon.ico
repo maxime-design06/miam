@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+:root {
+  /* Fond et texte */
+  --background: #F1DDBE; /* Coconut Cream */
+  --foreground: #3A2A1C; /* brun profond, texte principal */
+  --muted: #B09270; /* texte secondaire, discret */
+
+  /* Palette MIAM (charte validée) */
+  --color-papaya: #C12E18;   /* Spicy Papaya */
+  --color-honey: #9E2C23;    /* Burnt Honey Glaze */
+  --color-mango: #EE7B21;    /* Mango Blade */
+  --color-pulp: #F8AF3A;     /* Sparkling Pulp */
+  --color-kiwi: #94B44F;     /* Kiwi Acid */
+  --color-leaf: #7E9446;     /* Raw Leaf */
+  --color-cream: #F1DDBE;    /* Coconut Cream */
+
+  --surface: #FFFFFF; /* fond des cartes */
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+
+  --color-papaya: var(--color-papaya);
+  --color-honey: var(--color-honey);
+  --color-mango: var(--color-mango);
+  --color-pulp: var(--color-pulp);
+  --color-kiwi: var(--color-kiwi);
+  --color-leaf: var(--color-leaf);
+  --color-cream: var(--color-cream);
+
+  --font-display: var(--font-bagel-fat-one);
+  --font-sans: var(--font-inter);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
