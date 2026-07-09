@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Bagel_Fat_One, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -22,6 +22,15 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "MIAM — mes recettes",
   description: "Bibliothèque personnelle de recettes de cuisine",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "MIAM",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#F1DDBE",
 };
 
 export default function RootLayout({
