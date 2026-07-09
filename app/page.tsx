@@ -1,11 +1,10 @@
 import { Search, User } from "lucide-react";
 import { RecipeCard } from "@/components/RecipeCard";
 import { CategoryPills } from "@/components/CategoryPills";
-import { mockCategories } from "@/lib/mock-data";
-import { getRecipes } from "@/lib/recipes";
+import { getRecipes, getCategories } from "@/lib/recipes";
 
 export default async function Home() {
-  const recipes = await getRecipes();
+  const [recipes, categories] = await Promise.all([getRecipes(), getCategories()]);
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 py-8">
@@ -19,7 +18,7 @@ export default async function Home() {
         </nav>
       </header>
 
-      {/* Hero + recherche */}
+      {/* Hero + recherche (redirige vers le catalogue avec le résultat) */}
       <section className="text-center py-6 mb-10">
         <h1 className="font-display text-3xl md:text-4xl text-foreground mb-3 leading-relaxed">
           on cuisine quoi,
@@ -29,18 +28,19 @@ export default async function Home() {
         <p className="text-muted text-sm mb-6">
           plus de 1000 recettes, toutes au même endroit
         </p>
-        <div className="max-w-md mx-auto relative">
+        <form method="get" action="/recettes" className="max-w-md mx-auto relative">
           <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
+            name="q"
             placeholder="rechercher une recette, un ingrédient..."
             className="w-full h-10 pl-10 pr-4 rounded-full bg-surface text-sm outline-none placeholder:text-muted"
           />
-        </div>
+        </form>
       </section>
 
       {/* Filtres */}
-      <CategoryPills categories={mockCategories} />
+      <CategoryPills categories={categories} />
 
       {/* Grille de recettes */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">

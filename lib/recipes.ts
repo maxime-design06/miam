@@ -131,15 +131,49 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
  * Fait en deux requêtes simples plutôt qu'une seule requête avec
  * une jointure imbriquée sur deux niveaux, plus fiable avec Supabase.
  */
-export async function getRecipes(): Promise<Recipe[]> {
+export async function getRecipes(filters?: {
+  search?: string;
+  categorySlug?: string;
+}): Promise<Recipe[]> {
   const supabase = await createClient();
 
-  const { data: recipeRows, error: recipesError } = await supabase
+  // Si un filtre de catégorie est demandé, on récupère d'abord les
+  // identifiants des recettes qui appartiennent à cette catégorie.
+  let recipeIdFilter: string[] | null = null;
+  if (filters?.categorySlug) {
+    const { data: links, error: linksError } = await supabase
+      .from("recipe_categories")
+      .select("recipe_id, categories!inner ( slug )")
+      .eq("categories.slug", filters.categorySlug);
+
+    if (linksError) {
+      console.error("Erreur lors du filtrage par catégorie :", linksError.message);
+      return [];
+    }
+
+    recipeIdFilter = (links ?? []).map((link) => link.recipe_id);
+    if (recipeIdFilter.length === 0) return [];
+  }
+
+  let query = supabase
     .from("recipes")
     .select(
       "id, title, slug, description, prep_time_minutes, cook_time_minutes, servings, difficulty"
-    )
-    .order("created_at", { ascending: false });
+    );
+
+  const term = filters?.search?.trim();
+  if (term) {
+    const escaped = term.replace(/[%_]/g, "");
+    query = query.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`);
+  }
+
+  if (recipeIdFilter) {
+    query = query.in("id", recipeIdFilter);
+  }
+
+  const { data: recipeRows, error: recipesError } = await query.order("created_at", {
+    ascending: false,
+  });
 
   if (recipesError) {
     console.error("Erreur lors de la récupération des recettes :", recipesError.message);
