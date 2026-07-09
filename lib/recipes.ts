@@ -25,6 +25,16 @@ type CategoryLinkRow = {
   categories: { name: string } | { name: string }[] | null;
 };
 
+/**
+ * Indique si la personne qui consulte la page est connectée
+ * (donc autorisée à voir les boutons d'administration).
+ */
+export async function isLoggedIn(): Promise<boolean> {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+  return Boolean(data.user);
+}
+
 export interface RecipeEditData {
   id: string;
   title: string;
@@ -209,6 +219,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
 export async function getRecipes(filters?: {
   search?: string;
   categorySlug?: string;
+  sort?: "recent" | "oldest" | "alpha";
 }): Promise<Recipe[]> {
   const supabase = await createClient();
 
@@ -246,9 +257,11 @@ export async function getRecipes(filters?: {
     query = query.in("id", recipeIdFilter);
   }
 
-  const { data: recipeRows, error: recipesError } = await query.order("created_at", {
-    ascending: false,
-  });
+  const sort = filters?.sort ?? "recent";
+  const { data: recipeRows, error: recipesError } =
+    sort === "alpha"
+      ? await query.order("title", { ascending: true })
+      : await query.order("created_at", { ascending: sort === "oldest" });
 
   if (recipesError) {
     console.error("Erreur lors de la récupération des recettes :", recipesError.message);

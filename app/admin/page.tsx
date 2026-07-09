@@ -1,9 +1,21 @@
 import Link from "next/link";
+import { Search } from "lucide-react";
 import { getRecipes } from "@/lib/recipes";
 import { signOut, deleteRecipe } from "@/app/admin/actions";
 
-export default async function AdminPage() {
-  const recipes = await getRecipes();
+const sortOptions = [
+  { value: "recent", label: "plus récentes" },
+  { value: "oldest", label: "plus anciennes" },
+  { value: "alpha", label: "ordre alphabétique" },
+];
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; sort?: "recent" | "oldest" | "alpha" }>;
+}) {
+  const { q, sort } = await searchParams;
+  const recipes = await getRecipes({ search: q, sort: sort ?? "recent" });
 
   return (
     <main className="max-w-3xl w-full mx-auto px-6 py-8">
@@ -26,8 +38,39 @@ export default async function AdminPage() {
         + ajouter une recette
       </Link>
 
+      {/* Recherche et tri */}
+      <form method="get" action="/admin" className="flex gap-2 mb-6">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            name="q"
+            defaultValue={q ?? ""}
+            placeholder="rechercher par mot-clé..."
+            className="w-full h-10 pl-10 pr-4 rounded-full bg-surface text-sm outline-none text-foreground"
+          />
+        </div>
+        <select
+          name="sort"
+          defaultValue={sort ?? "recent"}
+          className="h-10 px-4 rounded-full bg-surface text-sm outline-none text-foreground"
+        >
+          {sortOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <button
+          type="submit"
+          className="h-10 px-4 rounded-full bg-leaf text-cream text-sm font-display"
+        >
+          filtrer
+        </button>
+      </form>
+
       {recipes.length === 0 ? (
-        <p className="text-muted text-sm">Aucune recette pour le moment.</p>
+        <p className="text-muted text-sm">Aucune recette ne correspond.</p>
       ) : (
         <ul className="space-y-2">
           {recipes.map((recipe) => (

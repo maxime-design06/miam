@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { Clock, Users, ChefHat, Soup, Cake, Salad, User } from "lucide-react";
-import { getRecipeBySlug } from "@/lib/recipes";
+import Link from "next/link";
+import { Clock, Users, ChefHat, Soup, Cake, Salad, User, Pencil } from "lucide-react";
+import { getRecipeBySlug, isLoggedIn } from "@/lib/recipes";
 import { accentBg, accentIconColor } from "@/components/RecipeCard";
 import type { Recipe } from "@/types/recipe";
 
@@ -23,7 +24,7 @@ export default async function RecipePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const recipe = await getRecipeBySlug(slug);
+  const [recipe, loggedIn] = await Promise.all([getRecipeBySlug(slug), isLoggedIn()]);
 
   if (!recipe) {
     notFound();
@@ -57,9 +58,18 @@ export default async function RecipePage({
       <p className="text-xs text-muted uppercase tracking-wide mb-2">
         {recipe.category}
       </p>
-      <h1 className="font-display text-3xl text-foreground mb-3">
-        {recipe.title}
-      </h1>
+      <div className="flex items-start justify-between gap-4 mb-3">
+        <h1 className="font-display text-3xl text-foreground">{recipe.title}</h1>
+        {loggedIn && (
+          <Link
+            href={`/admin/recettes/${recipe.id}`}
+            className="flex items-center gap-1.5 text-sm text-leaf shrink-0 mt-2"
+          >
+            <Pencil className="w-3.5 h-3.5" />
+            modifier
+          </Link>
+        )}
+      </div>
       {recipe.description && (
         <p className="text-muted text-sm mb-6">{recipe.description}</p>
       )}
