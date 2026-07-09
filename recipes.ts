@@ -1,34 +1,42 @@
-import type { Metadata } from "next";
-import { Inter, Bagel_Fat_One } from "next/font/google";
-import "./globals.css";
+import { User } from "lucide-react";
+import { getCategories } from "@/lib/recipes";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
-});
+export default async function CategoriesPage() {
+  const categories = await getCategories();
 
-const bagelFatOne = Bagel_Fat_One({
-  variable: "--font-bagel-fat-one",
-  subsets: ["latin"],
-  weight: "400",
-});
-
-export const metadata: Metadata = {
-  title: "MIAM — mes recettes",
-  description: "Bibliothèque personnelle de recettes de cuisine",
-};
-
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
   return (
-    <html
-      lang="fr"
-      className={`${inter.variable} ${bagelFatOne.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
-    </html>
+    <main className="max-w-5xl w-full mx-auto px-6 py-8">
+      <header className="flex items-center justify-between mb-10">
+        <a href="/" className="font-display text-2xl text-papaya">
+          miam
+        </a>
+        <nav className="flex items-center gap-5 text-sm text-foreground">
+          <a href="/recettes">Recettes</a>
+          <a href="/categories">Catégories</a>
+          <User className="w-4 h-4" />
+        </nav>
+      </header>
+
+      <h1 className="font-display text-2xl text-foreground mb-6">
+        catégories
+      </h1>
+
+      {categories.length === 0 ? (
+        <p className="text-muted text-sm">Aucune catégorie pour le moment.</p>
+      ) : (
+        <ul className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          {categories.map((category) => (
+            <li key={category.id}>
+              <a
+                href={`/recettes?categorie=${category.slug}`}
+                className="block bg-surface rounded-2xl p-4 font-display text-sm text-foreground hover:opacity-90 transition"
+              >
+                {category.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
   );
 }

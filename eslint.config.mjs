@@ -1,109 +1,41 @@
 -- ============================================================
--- MIAM - Schéma de base de données
+-- MIAM - Données de test
 -- ============================================================
--- À exécuter dans Supabase : SQL Editor > New query > coller > Run
+-- À exécuter APRÈS schema.sql
+-- Supabase > SQL Editor > New query > coller > Run
 -- ============================================================
 
--- Catégories (Entrée, Plat, Dessert, ...)
-create table categories (
-  id uuid primary key default gen_random_uuid(),
-  name text not null unique,
-  slug text not null unique,
-  created_at timestamptz not null default now()
-);
+insert into categories (id, name, slug) values
+  ('11111111-1111-1111-1111-111111111111', 'Entrées', 'entrees'),
+  ('22222222-2222-2222-2222-222222222222', 'Plats', 'plats'),
+  ('33333333-3333-3333-3333-333333333333', 'Desserts', 'desserts');
 
--- Tags (Végétarien, Rapide, Italien, ...)
-create table tags (
-  id uuid primary key default gen_random_uuid(),
-  name text not null unique,
-  slug text not null unique,
-  created_at timestamptz not null default now()
-);
+insert into tags (id, name, slug) values
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Végétarien', 'vegetarien'),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Rapide', 'rapide');
 
--- Recettes (table principale)
-create table recipes (
-  id uuid primary key default gen_random_uuid(),
-  title text not null,
-  slug text not null unique,
-  description text,
-  image_url text,
-  prep_time_minutes integer,
-  cook_time_minutes integer,
-  servings integer,
-  difficulty text check (difficulty in ('facile', 'moyen', 'difficile')),
-  author text,
-  notes text, -- notes personnelles, non affichées publiquement
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
+insert into recipes (id, title, slug, description, prep_time_minutes, cook_time_minutes, servings, difficulty) values
+  ('44444444-4444-4444-4444-444444444444', 'Velouté de potimarron', 'veloute-de-potimarron', 'Un velouté d''automne réconfortant, doux et légèrement épicé.', 15, 20, 4, 'facile'),
+  ('55555555-5555-5555-5555-555555555555', 'Risotto aux champignons', 'risotto-aux-champignons', 'Un risotto crémeux aux champignons de saison.', 15, 30, 4, 'moyen'),
+  ('66666666-6666-6666-6666-666666666666', 'Fondant au chocolat', 'fondant-au-chocolat', 'Un cœur coulant au chocolat noir, simple et efficace.', 10, 15, 6, 'facile'),
+  ('77777777-7777-7777-7777-777777777777', 'Salade de lentilles', 'salade-de-lentilles', 'Fraîche, rapide et pleine de protéines végétales.', 20, 0, 2, 'facile');
 
--- Ingrédients d'une recette (une ligne = un ingrédient)
-create table ingredients (
-  id uuid primary key default gen_random_uuid(),
-  recipe_id uuid not null references recipes(id) on delete cascade,
-  name text not null,
-  quantity numeric,
-  unit text,
-  display_order integer not null default 0
-);
+insert into recipe_categories (recipe_id, category_id) values
+  ('44444444-4444-4444-4444-444444444444', '11111111-1111-1111-1111-111111111111'),
+  ('55555555-5555-5555-5555-555555555555', '22222222-2222-2222-2222-222222222222'),
+  ('66666666-6666-6666-6666-666666666666', '33333333-3333-3333-3333-333333333333'),
+  ('77777777-7777-7777-7777-777777777777', '11111111-1111-1111-1111-111111111111');
 
--- Étapes d'une recette (une ligne = une étape)
-create table steps (
-  id uuid primary key default gen_random_uuid(),
-  recipe_id uuid not null references recipes(id) on delete cascade,
-  step_number integer not null,
-  description text not null
-);
+insert into recipe_tags (recipe_id, tag_id) values
+  ('77777777-7777-7777-7777-777777777777', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'),
+  ('77777777-7777-7777-7777-777777777777', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
 
--- Conseils liés à une recette (une ligne = un conseil)
-create table recipe_tips (
-  id uuid primary key default gen_random_uuid(),
-  recipe_id uuid not null references recipes(id) on delete cascade,
-  tip text not null,
-  display_order integer not null default 0
-);
+insert into ingredients (recipe_id, name, quantity, unit, display_order) values
+  ('44444444-4444-4444-4444-444444444444', 'potimarron', 1, null, 1),
+  ('44444444-4444-4444-4444-444444444444', 'oignon', 1, null, 2),
+  ('44444444-4444-4444-4444-444444444444', 'bouillon de légumes', 1, 'l', 3);
 
--- Liaison recettes <-> catégories (une recette peut avoir plusieurs catégories)
-create table recipe_categories (
-  recipe_id uuid not null references recipes(id) on delete cascade,
-  category_id uuid not null references categories(id) on delete cascade,
-  primary key (recipe_id, category_id)
-);
-
--- Liaison recettes <-> tags (une recette peut avoir plusieurs tags)
-create table recipe_tags (
-  recipe_id uuid not null references recipes(id) on delete cascade,
-  tag_id uuid not null references tags(id) on delete cascade,
-  primary key (recipe_id, tag_id)
-);
-
--- ============================================================
--- Index pour accélérer les recherches et filtres
--- ============================================================
-create index idx_recipes_slug on recipes(slug);
-create index idx_recipes_difficulty on recipes(difficulty);
-create index idx_ingredients_recipe_id on ingredients(recipe_id);
-create index idx_steps_recipe_id on steps(recipe_id);
-create index idx_recipe_categories_category_id on recipe_categories(category_id);
-create index idx_recipe_tags_tag_id on recipe_tags(tag_id);
-
--- Index de recherche texte (titre + description)
-create index idx_recipes_search on recipes using gin (
-  to_tsvector('french', coalesce(title, '') || ' ' || coalesce(description, ''))
-);
-
--- ============================================================
--- Mise à jour automatique de updated_at
--- ============================================================
-create or replace function set_updated_at()
-returns trigger as $$
-begin
-  new.updated_at = now();
-  return new;
-end;
-$$ language plpgsql;
-
-create trigger trg_recipes_updated_at
-before update on recipes
-for each row
-execute function set_updated_at();
+insert into steps (recipe_id, step_number, description) values
+  ('44444444-4444-4444-4444-444444444444', 1, 'Éplucher et couper le potimarron et l''oignon en morceaux.'),
+  ('44444444-4444-4444-4444-444444444444', 2, 'Faire revenir l''oignon puis ajouter le potimarron et le bouillon.'),
+  ('44444444-4444-4444-4444-444444444444', 3, 'Cuire 20 minutes puis mixer jusqu''à obtenir un velouté lisse.');
