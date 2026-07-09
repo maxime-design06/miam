@@ -1,0 +1,30 @@
+import { notFound } from "next/navigation";
+import { RecipeForm } from "@/components/admin/RecipeForm";
+import { updateRecipe, deleteRecipe } from "@/app/admin/actions";
+import { getCategories, getRecipeForAdmin } from "@/lib/recipes";
+
+export default async function EditRecipePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const [recipe, categories] = await Promise.all([getRecipeForAdmin(id), getCategories()]);
+
+  if (!recipe) {
+    notFound();
+  }
+
+  return (
+    <main className="max-w-3xl w-full mx-auto px-6 py-8">
+      <h1 className="font-display text-2xl text-foreground mb-6">modifier la recette</h1>
+      <RecipeForm action={updateRecipe.bind(null, id)} categories={categories} initial={recipe} />
+
+      <form action={deleteRecipe.bind(null, id)} className="mt-8 pt-6 border-t border-surface">
+        <button type="submit" className="text-sm text-papaya">
+          supprimer cette recette
+        </button>
+      </form>
+    </main>
+  );
+}

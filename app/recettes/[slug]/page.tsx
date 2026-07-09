@@ -41,7 +41,7 @@ export default async function RecipePage({
         <nav className="flex items-center gap-5 text-sm text-foreground">
           <a href="/recettes">Recettes</a>
           <a href="/categories">Catégories</a>
-          <User className="w-4 h-4" />
+          <a href="/admin"><User className="w-4 h-4" /></a>
         </nav>
       </header>
 

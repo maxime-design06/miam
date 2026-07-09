@@ -25,6 +25,81 @@ type CategoryLinkRow = {
   categories: { name: string } | { name: string }[] | null;
 };
 
+export interface RecipeEditData {
+  id: string;
+  title: string;
+  slug: string;
+  description: string;
+  prepTimeMinutes: number;
+  cookTimeMinutes: number;
+  servings: number;
+  difficulty: string;
+  categoryId: string | null;
+  ingredients: { name: string; quantity: number | null; unit: string | null }[];
+  steps: { description: string }[];
+  tips: { tip: string }[];
+}
+
+/**
+ * Récupère une recette avec toutes ses données modifiables,
+ * pour préremplir le formulaire d'édition dans l'administration.
+ */
+export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | null> {
+  const supabase = await createClient();
+
+  const { data: recipe, error } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, slug, description, prep_time_minutes, cook_time_minutes, servings, difficulty"
+    )
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !recipe) {
+    if (error) console.error(error.message);
+    return null;
+  }
+
+  const [{ data: ingredients }, { data: steps }, { data: tips }, { data: categoryLink }] =
+    await Promise.all([
+      supabase
+        .from("ingredients")
+        .select("name, quantity, unit")
+        .eq("recipe_id", id)
+        .order("display_order"),
+      supabase.from("steps").select("description").eq("recipe_id", id).order("step_number"),
+      supabase
+        .from("recipe_tips")
+        .select("tip")
+        .eq("recipe_id", id)
+        .order("display_order"),
+      supabase
+        .from("recipe_categories")
+        .select("category_id")
+        .eq("recipe_id", id)
+        .maybeSingle(),
+    ]);
+
+  return {
+    id: recipe.id,
+    title: recipe.title,
+    slug: recipe.slug,
+    description: recipe.description ?? "",
+    prepTimeMinutes: recipe.prep_time_minutes ?? 0,
+    cookTimeMinutes: recipe.cook_time_minutes ?? 0,
+    servings: recipe.servings ?? 1,
+    difficulty: recipe.difficulty ?? "facile",
+    categoryId: categoryLink?.category_id ?? null,
+    ingredients: (ingredients ?? []).map((i) => ({
+      name: i.name,
+      quantity: i.quantity,
+      unit: i.unit,
+    })),
+    steps: (steps ?? []).map((s) => ({ description: s.description })),
+    tips: (tips ?? []).map((t) => ({ tip: t.tip })),
+  };
+}
+
 export async function getCategories() {
   const supabase = await createClient();
 
