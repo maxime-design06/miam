@@ -47,6 +47,7 @@ export async function removeFromWeeklyList(id: string, slug: string) {
 
 export async function setWeeklyField(
   id: string,
+  recipeId: string,
   field: "is_cooked" | "is_eaten" | "has_leftovers",
   formData: FormData
 ) {
@@ -54,6 +55,16 @@ export async function setWeeklyField(
   const value = formData.get("value") === "on";
 
   await supabase.from("weekly_recipes").update({ [field]: value }).eq("id", id);
+
+  // On garde une trace durable de la dernière fois qu'une recette a
+  // été mangée, même après avoir vidé la liste de la semaine.
+  if (field === "is_eaten" && value) {
+    await supabase
+      .from("recipes")
+      .update({ last_eaten_at: new Date().toISOString() })
+      .eq("id", recipeId);
+    revalidatePath("/");
+  }
 
   revalidatePath("/semaine");
 }

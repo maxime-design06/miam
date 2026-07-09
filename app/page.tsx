@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/SiteHeader";
 import {
   getRecipesPaginated,
   getRecipesByTagSlug,
+  getRecentlyEatenRecipes,
+  getForgottenRecipes,
   getCategories,
   isLoggedIn,
 } from "@/lib/recipes";
@@ -15,14 +17,23 @@ export default async function Home() {
   const mealPeriod = getMealPeriod();
   const season = getCurrentSeason();
 
-  const [{ recipes: latest }, categories, mealSuggestions, seasonSuggestions, loggedIn] =
-    await Promise.all([
-      getRecipesPaginated({ pageSize: 4 }),
-      getCategories(),
-      getRecipesByTagSlug(mealPeriod.slug, 4),
-      getRecipesByTagSlug(season.slug, 4),
-      isLoggedIn(),
-    ]);
+  const [
+    { recipes: latest },
+    categories,
+    mealSuggestions,
+    seasonSuggestions,
+    recentlyEaten,
+    forgotten,
+    loggedIn,
+  ] = await Promise.all([
+    getRecipesPaginated({ pageSize: 4 }),
+    getCategories(),
+    getRecipesByTagSlug(mealPeriod.slug, 4),
+    getRecipesByTagSlug(season.slug, 4),
+    getRecentlyEatenRecipes(4),
+    getForgottenRecipes(4),
+    isLoggedIn(),
+  ]);
 
   return (
     <main className="max-w-5xl w-full mx-auto px-6 py-8">
@@ -92,7 +103,7 @@ export default async function Home() {
           <h2 className="font-heading font-bold text-lg text-foreground mb-4">
             Recettes de saison : {season.label}
           </h2>
-          <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
             {seasonSuggestions.map((recipe) => (
               <RecipeCard key={recipe.id} recipe={recipe} />
             ))}
@@ -100,11 +111,39 @@ export default async function Home() {
         </>
       ) : (
         loggedIn && (
-          <p className="text-sm text-muted">
+          <p className="text-sm text-muted mb-12">
             Aucune recette taguée « {season.slug} » pour l&apos;instant. Ajoute ce tag à quelques
             recettes pour voir des suggestions de saison ici.
           </p>
         )
+      )}
+
+      {/* Mangées récemment */}
+      {recentlyEaten.length > 0 && (
+        <>
+          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
+            Mangées récemment
+          </h2>
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+            {recentlyEaten.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </section>
+        </>
+      )}
+
+      {/* Recettes oubliées */}
+      {forgotten.length > 0 && (
+        <>
+          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
+            Ça fait longtemps...
+          </h2>
+          <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {forgotten.map((recipe) => (
+              <RecipeCard key={recipe.id} recipe={recipe} />
+            ))}
+          </section>
+        </>
       )}
     </main>
   );

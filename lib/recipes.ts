@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Difficulty, Recipe } from "@/types/recipe";
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+
 // Couleur d'accent attribuée selon la catégorie (cohérent avec la charte MIAM)
 const categoryAccent: Record<string, Recipe["accentColor"]> = {
   Entrées: "papaya",
@@ -320,6 +323,90 @@ export async function getRecipesByTagSlug(tagSlug: string, limit: number): Promi
       accentColor: categoryAccent[category] ?? "kiwi",
     };
   });
+}
+
+type LastEatenRow = RecipeRow & { last_eaten_at: string | null };
+
+function mapRecipeRow(row: LastEatenRow, categoryByRecipeId: Map<string, string>): Recipe {
+  const category = categoryByRecipeId.get(row.id) ?? "Plats";
+  return {
+    id: row.id,
+    title: row.title,
+    slug: row.slug,
+    description: row.description ?? "",
+    imageUrl: row.image_url ?? null,
+    prepTimeMinutes: row.prep_time_minutes ?? 0,
+    cookTimeMinutes: row.cook_time_minutes ?? 0,
+    servings: row.servings ?? 1,
+    difficulty: row.difficulty ?? "facile",
+    category,
+    accentColor: categoryAccent[category] ?? "kiwi",
+  };
+}
+
+async function getCategoryMap(supabase: SupabaseServerClient, recipeIds: string[]) {
+  const { data: categoryLinks } = await supabase
+    .from("recipe_categories")
+    .select("recipe_id, categories ( name )")
+    .in("recipe_id", recipeIds);
+
+  const categoryByRecipeId = new Map<string, string>();
+  for (const link of (categoryLinks as CategoryLinkRow[] | null) ?? []) {
+    const categoryEntry = Array.isArray(link.categories) ? link.categories[0] : link.categories;
+    if (categoryEntry?.name) {
+      categoryByRecipeId.set(link.recipe_id, categoryEntry.name);
+    }
+  }
+  return categoryByRecipeId;
+}
+
+/**
+ * Recettes mangées le plus récemment (nécessite d'avoir coché
+ * "mangée" au moins une fois dans la liste de la semaine).
+ */
+export async function getRecentlyEatenRecipes(limit: number): Promise<Recipe[]> {
+  const supabase = await createClient();
+
+  const { data: rows, error } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty, last_eaten_at"
+    )
+    .not("last_eaten_at", "is", null)
+    .order("last_eaten_at", { ascending: false })
+    .limit(limit);
+
+  if (error || !rows) {
+    if (error) console.error("Erreur lors de la récupération des recettes mangées :", error.message);
+    return [];
+  }
+
+  const categoryByRecipeId = await getCategoryMap(supabase, rows.map((r) => r.id));
+  return (rows as LastEatenRow[]).map((row) => mapRecipeRow(row, categoryByRecipeId));
+}
+
+/**
+ * Recettes jamais mangées, ou mangées il y a le plus longtemps —
+ * pour remettre en lumière les recettes qu'on oublie.
+ */
+export async function getForgottenRecipes(limit: number): Promise<Recipe[]> {
+  const supabase = await createClient();
+
+  const { data: rows, error } = await supabase
+    .from("recipes")
+    .select(
+      "id, title, slug, description, image_url, prep_time_minutes, cook_time_minutes, servings, difficulty, last_eaten_at"
+    )
+    .order("last_eaten_at", { ascending: true, nullsFirst: true })
+    .limit(limit);
+
+  if (error || !rows) {
+    if (error) console.error("Erreur lors de la récupération des recettes oubliées :", error.message);
+    return [];
+  }
+
+  const categoryByRecipeId = await getCategoryMap(supabase, rows.map((r) => r.id));
+  return (rows as LastEatenRow[]).map((row) => mapRecipeRow(row, categoryByRecipeId));
 }
 
 export interface PaginatedRecipes {

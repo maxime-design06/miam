@@ -74,7 +74,7 @@ export default async function SemainePage() {
                   return (
                     <AutoSubmitCheckbox
                       key={key}
-                      action={setWeeklyField.bind(null, entry.id, key)}
+                      action={setWeeklyField.bind(null, entry.id, entry.recipeId, key)}
                       defaultChecked={value}
                       label={label}
                     />
