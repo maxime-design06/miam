@@ -25,7 +25,7 @@ export default async function EditRecipePage({
   }
 
   return (
-    <main className="max-w-3xl w-full mx-auto px-6 py-8">
+    <main className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <h1 className="font-heading font-bold text-2xl text-foreground mb-6">Modifier la recette</h1>
 
       {error && (

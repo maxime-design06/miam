@@ -19,8 +19,8 @@ export default async function AdminPage({
   const recipes = await getRecipes({ search: q, sort: sort ?? "recent" });
 
   return (
-    <main className="max-w-3xl w-full mx-auto px-6 py-8">
-      <header className="flex items-center justify-between mb-8">
+    <main className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-8">
         <h1 className="font-display text-2xl text-papaya">miam admin</h1>
         <div className="flex items-center gap-4 text-sm text-foreground">
           <Link href="/">Voir le site</Link>
@@ -38,7 +38,7 @@ export default async function AdminPage({
         </p>
       )}
 
-      <div className="flex gap-3 mb-6">
+      <div className="flex flex-wrap gap-3 mb-6">
         <Link
           href="/admin/recettes/nouvelle"
           className="inline-block px-4 py-2 rounded-full bg-papaya text-white text-sm font-heading font-bold"
@@ -60,7 +60,7 @@ export default async function AdminPage({
       </div>
 
       {/* Recherche et tri */}
-      <form method="get" action="/admin" className="flex gap-2 mb-6">
+      <form method="get" action="/admin" className="flex flex-col sm:flex-row gap-2 mb-6">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -71,23 +71,25 @@ export default async function AdminPage({
             className="w-full h-10 pl-10 pr-4 rounded-full bg-surface text-sm outline-none text-foreground"
           />
         </div>
-        <select
-          name="sort"
-          defaultValue={sort ?? "recent"}
-          className="h-10 px-4 rounded-full bg-surface text-sm outline-none text-foreground"
-        >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <button
-          type="submit"
-          className="h-10 px-4 rounded-full bg-leaf text-white text-sm font-heading font-bold"
-        >
-          Filtrer
-        </button>
+        <div className="flex gap-2">
+          <select
+            name="sort"
+            defaultValue={sort ?? "recent"}
+            className="flex-1 sm:flex-none h-10 px-4 rounded-full bg-surface text-sm outline-none text-foreground"
+          >
+            {sortOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            className="h-10 px-4 rounded-full bg-leaf text-white text-sm font-heading font-bold shrink-0"
+          >
+            Filtrer
+          </button>
+        </div>
       </form>
 
       {recipes.length === 0 ? (
@@ -97,10 +99,10 @@ export default async function AdminPage({
           {recipes.map((recipe) => (
             <li
               key={recipe.id}
-              className="flex items-center justify-between bg-surface rounded-2xl px-4 py-3"
+              className="flex items-center justify-between gap-3 bg-surface rounded-2xl px-4 py-3"
             >
-              <span className="text-sm text-foreground">{recipe.title}</span>
-              <div className="flex items-center gap-4 text-sm">
+              <span className="text-sm text-foreground truncate min-w-0">{recipe.title}</span>
+              <div className="flex items-center gap-4 text-sm shrink-0">
                 <Link href={`/admin/recettes/${recipe.id}`} className="text-leaf">
                   Modifier
                 </Link>

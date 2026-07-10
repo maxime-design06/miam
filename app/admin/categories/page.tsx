@@ -12,8 +12,8 @@ export default async function AdminCategoriesPage({
   const categories = await getCategories();
 
   return (
-    <main className="max-w-lg w-full mx-auto px-6 py-8">
-      <header className="flex items-center justify-between mb-8">
+    <main className="max-w-lg w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <header className="flex flex-wrap items-center justify-between gap-2 mb-8">
         <h1 className="font-heading font-bold text-2xl text-papaya">Catégories</h1>
         <Link href="/admin" className="text-sm text-foreground">
           ← Retour
@@ -49,9 +49,9 @@ export default async function AdminCategoriesPage({
           {categories.map((category) => (
             <li
               key={category.id}
-              className="flex items-center justify-between bg-surface rounded-2xl px-4 py-2.5"
+              className="flex items-center justify-between gap-3 bg-surface rounded-2xl px-4 py-2.5"
             >
-              <span className="text-sm text-foreground">{category.name}</span>
+              <span className="text-sm text-foreground truncate min-w-0">{category.name}</span>
               <form action={deleteCategory.bind(null, category.id)}>
                 <ConfirmDeleteButton
                   className="text-sm text-papaya"

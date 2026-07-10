@@ -25,10 +25,10 @@ export default async function SemainePage({
   const [entries, loggedIn] = await Promise.all([getWeeklyList(), isLoggedIn()]);
 
   return (
-    <main className="max-w-3xl w-full mx-auto px-6 py-8">
+    <main className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <SiteHeader />
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
         <h1 className="font-heading font-bold text-2xl text-foreground">Cette semaine</h1>
         <span className="text-sm text-muted">
           {entries.length} recette{entries.length > 1 ? "s" : ""}
@@ -91,7 +91,7 @@ export default async function SemainePage({
                 </span>
               )}
 
-              <div className="flex items-center gap-4 text-xs">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
                 {statusFields.map(({ field, key, label }) => {
                   const value = entry[field];
                   if (!loggedIn) {

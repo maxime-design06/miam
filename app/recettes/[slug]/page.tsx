@@ -40,7 +40,7 @@ export default async function RecipePage({
   const totalTime = recipe.prepTimeMinutes + recipe.cookTimeMinutes;
 
   return (
-    <main className="max-w-3xl w-full mx-auto px-6 py-8">
+    <main className="max-w-3xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <SiteHeader />
 
       {/* Bandeau visuel */}
@@ -65,10 +65,12 @@ export default async function RecipePage({
       <p className="text-xs text-muted uppercase tracking-wide mb-2">
         {recipe.category}
       </p>
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <h1 className="font-display text-3xl text-foreground">{recipe.title}</h1>
+      <div className="mb-3">
+        <h1 className="font-display text-2xl sm:text-3xl text-foreground mb-2 break-words">
+          {recipe.title}
+        </h1>
         {loggedIn && (
-          <div className="flex items-center gap-4 shrink-0 mt-2">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <WeeklyToggleButton
               recipeId={recipe.id}
               slug={recipe.slug}
@@ -114,7 +116,7 @@ export default async function RecipePage({
       )}
 
       {/* Informations pratiques */}
-      <div className="flex gap-6 text-sm text-foreground mb-10 bg-surface rounded-2xl p-4">
+      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-foreground mb-10 bg-surface rounded-2xl p-4">
         <span className="flex items-center gap-1.5">
           <Clock className="w-4 h-4 text-muted" />
           {totalTime} min

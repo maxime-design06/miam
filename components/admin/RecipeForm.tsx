@@ -376,12 +376,12 @@ export function RecipeForm({
 
         {sections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="bg-surface rounded-2xl p-4 space-y-5">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <input
                 placeholder='Titre de cette partie (ex : "Garniture") — laisse vide pour une recette simple'
                 value={section.title}
                 onChange={(e) => updateSection(sectionIndex, { title: e.target.value })}
-                className="flex-1 h-10 px-4 rounded-full bg-background text-sm outline-none text-foreground"
+                className="flex-1 min-w-[200px] h-10 px-4 rounded-full bg-background text-sm outline-none text-foreground"
               />
               {sections.length > 1 && (
                 <button
@@ -399,7 +399,7 @@ export function RecipeForm({
               <label className="text-sm text-muted block mb-2">ingrédients</label>
               <div className="space-y-2">
                 {section.ingredients.map((ingredient, ingredientIndex) => (
-                  <div key={ingredientIndex} className="flex gap-2">
+                  <div key={ingredientIndex} className="flex flex-wrap gap-2">
                     <input
                       placeholder="quantité"
                       type="number"
@@ -464,7 +464,7 @@ export function RecipeForm({
                       onChange={(e) =>
                         updateIngredient(sectionIndex, ingredientIndex, { name: e.target.value })
                       }
-                      className="flex-1 h-10 px-3 rounded-full bg-background text-sm outline-none text-foreground"
+                      className="flex-1 min-w-[140px] h-10 px-3 rounded-full bg-background text-sm outline-none text-foreground"
                     />
                     <button
                       type="button"

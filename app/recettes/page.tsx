@@ -28,10 +28,10 @@ export default async function RecettesPage({
   }
 
   return (
-    <main className="max-w-5xl w-full mx-auto px-6 py-8">
+    <main className="max-w-5xl w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
       <SiteHeader />
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
         <h1 className="font-heading font-bold text-2xl text-foreground">
           Toutes les recettes
         </h1>
