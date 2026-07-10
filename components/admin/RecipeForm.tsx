@@ -41,20 +41,20 @@ const inputClass =
   "w-full h-10 px-4 rounded-full bg-surface text-sm outline-none text-foreground";
 
 const UNIT_OPTIONS = [
-  { value: "", label: "Aucune (pièce, unité...)" },
-  { value: "g", label: "Grammes (g)" },
-  { value: "kg", label: "Kilogrammes (kg)" },
-  { value: "l", label: "Litres (l)" },
-  { value: "ml", label: "Millilitres (ml)" },
-  { value: "cl", label: "Centilitres (cl)" },
-  { value: "c. à soupe", label: "Cuillère à soupe" },
-  { value: "c. à café", label: "Cuillère à café" },
-  { value: "pincée", label: "Pincée" },
-  { value: "filet", label: "Filet" },
-  { value: "gousse", label: "Gousse" },
-  { value: "tranche", label: "Tranche" },
-  { value: "botte", label: "Botte" },
-  { value: "sachet", label: "Sachet" },
+  { value: "", label: "Aucune (pièce)" },
+  { value: "g", label: "g (grammes)" },
+  { value: "kg", label: "kg (kilogrammes)" },
+  { value: "l", label: "l (litres)" },
+  { value: "ml", label: "ml (millilitres)" },
+  { value: "cl", label: "cl (centilitres)" },
+  { value: "c. à s.", label: "c. à s. (cuillère à soupe)" },
+  { value: "c. à c.", label: "c. à c. (cuillère à café)" },
+  { value: "pincée", label: "pincée" },
+  { value: "filet", label: "filet" },
+  { value: "gousse", label: "gousse" },
+  { value: "tranche", label: "tranche" },
+  { value: "botte", label: "botte" },
+  { value: "sachet", label: "sachet" },
 ];
 
 export function RecipeForm({
