@@ -1,6 +1,6 @@
 import { RecipeForm } from "@/components/admin/RecipeForm";
 import { createRecipe } from "@/app/admin/actions";
-import { getCategories, getTags } from "@/lib/recipes";
+import { getCategories, getTags, getPopularIngredientNames } from "@/lib/recipes";
 
 export default async function NewRecipePage({
   searchParams,
@@ -8,7 +8,11 @@ export default async function NewRecipePage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
-  const [categories, tags] = await Promise.all([getCategories(), getTags()]);
+  const [categories, tags, ingredientSuggestions] = await Promise.all([
+    getCategories(),
+    getTags(),
+    getPopularIngredientNames(),
+  ]);
 
   return (
     <main className="max-w-3xl w-full mx-auto px-6 py-8">
@@ -20,7 +24,12 @@ export default async function NewRecipePage({
         </p>
       )}
 
-      <RecipeForm action={createRecipe} categories={categories} tags={tags} />
+      <RecipeForm
+        action={createRecipe}
+        categories={categories}
+        tags={tags}
+        ingredientSuggestions={ingredientSuggestions}
+      />
     </main>
   );
 }

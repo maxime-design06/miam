@@ -121,6 +121,34 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
   };
 }
 
+/**
+ * Renvoie les noms d'ingrédients les plus utilisés à travers toutes
+ * les recettes, du plus fréquent au moins fréquent. Sert à proposer
+ * des suggestions de saisie dans le formulaire de recette.
+ */
+export async function getPopularIngredientNames(limit = 150): Promise<string[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.from("ingredients").select("name");
+
+  if (error || !data) {
+    if (error) console.error("Erreur lors de la récupération des ingrédients :", error.message);
+    return [];
+  }
+
+  const counts = new Map<string, number>();
+  for (const row of data) {
+    const name = row.name?.trim();
+    if (!name) continue;
+    counts.set(name, (counts.get(name) ?? 0) + 1);
+  }
+
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, limit)
+    .map(([name]) => name);
+}
+
 export async function getTags() {
   const supabase = await createClient();
 

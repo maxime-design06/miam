@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { RecipeForm } from "@/components/admin/RecipeForm";
 import { updateRecipe, deleteRecipe } from "@/app/admin/actions";
-import { getCategories, getTags, getRecipeForAdmin } from "@/lib/recipes";
+import { getCategories, getTags, getRecipeForAdmin, getPopularIngredientNames } from "@/lib/recipes";
 import { ConfirmDeleteButton } from "@/components/ConfirmDeleteButton";
 
 export default async function EditRecipePage({
@@ -13,10 +13,11 @@ export default async function EditRecipePage({
 }) {
   const { id } = await params;
   const { error } = await searchParams;
-  const [recipe, categories, tags] = await Promise.all([
+  const [recipe, categories, tags, ingredientSuggestions] = await Promise.all([
     getRecipeForAdmin(id),
     getCategories(),
     getTags(),
+    getPopularIngredientNames(),
   ]);
 
   if (!recipe) {
@@ -37,6 +38,7 @@ export default async function EditRecipePage({
         action={updateRecipe.bind(null, id)}
         categories={categories}
         tags={tags}
+        ingredientSuggestions={ingredientSuggestions}
         initial={recipe}
       />
 

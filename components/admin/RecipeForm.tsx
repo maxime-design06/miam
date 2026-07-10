@@ -18,6 +18,7 @@ interface RecipeFormProps {
   action: (formData: FormData) => void;
   categories: { id: string; name: string }[];
   tags: { id: string; name: string }[];
+  ingredientSuggestions?: string[];
   initial?: {
     title: string;
     slug: string;
@@ -39,12 +40,43 @@ interface RecipeFormProps {
 const inputClass =
   "w-full h-10 px-4 rounded-full bg-surface text-sm outline-none text-foreground";
 
-export function RecipeForm({ action, categories, tags, initial }: RecipeFormProps) {
+const UNIT_OPTIONS = [
+  { value: "", label: "Aucune (pièce, unité...)" },
+  { value: "g", label: "Grammes (g)" },
+  { value: "kg", label: "Kilogrammes (kg)" },
+  { value: "l", label: "Litres (l)" },
+  { value: "ml", label: "Millilitres (ml)" },
+  { value: "cl", label: "Centilitres (cl)" },
+  { value: "c. à soupe", label: "Cuillère à soupe" },
+  { value: "c. à café", label: "Cuillère à café" },
+  { value: "pincée", label: "Pincée" },
+  { value: "filet", label: "Filet" },
+  { value: "gousse", label: "Gousse" },
+  { value: "tranche", label: "Tranche" },
+  { value: "botte", label: "Botte" },
+  { value: "sachet", label: "Sachet" },
+];
+
+export function RecipeForm({
+  action,
+  categories,
+  tags,
+  ingredientSuggestions = [],
+  initial,
+}: RecipeFormProps) {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initial?.tagIds ?? []);
   const [imagePreview, setImagePreview] = useState<string | null>(initial?.imageUrl ?? null);
   const [removeImage, setRemoveImage] = useState(false);
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     initial?.ingredients?.length ? initial.ingredients : [{ name: "", quantity: null, unit: "" }]
+  );
+  // Pour chaque ingrédient, indique si on est en train de saisir une unité
+  // "libre" (absente de la liste déroulante) plutôt que de choisir dedans.
+  const [customUnitRows, setCustomUnitRows] = useState<boolean[]>(() =>
+    (initial?.ingredients?.length ? initial.ingredients : [{ name: "", quantity: null, unit: "" }]).map(
+      (ingredient) =>
+        Boolean(ingredient.unit) && !UNIT_OPTIONS.some((option) => option.value === ingredient.unit)
+    )
   );
   const [steps, setSteps] = useState<Step[]>(
     initial?.steps?.length ? initial.steps : [{ description: "" }]
@@ -213,6 +245,11 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
       {/* Ingrédients */}
       <div>
         <label className="text-sm text-muted block mb-2">ingrédients</label>
+        <datalist id="ingredient-suggestions">
+          {ingredientSuggestions.map((name) => (
+            <option key={name} value={name} />
+          ))}
+        </datalist>
         <div className="space-y-2">
           {ingredients.map((ingredient, index) => (
             <div key={index} className="flex gap-2">
@@ -228,19 +265,64 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
                 }}
                 className="w-20 h-10 px-3 rounded-full bg-surface text-sm outline-none text-foreground"
               />
-              <input
-                placeholder="unité"
-                value={ingredient.unit ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setIngredients((prev) =>
-                    prev.map((item, i) => (i === index ? { ...item, unit: value } : item))
-                  );
-                }}
-                className="w-24 h-10 px-3 rounded-full bg-surface text-sm outline-none text-foreground"
-              />
+
+              {customUnitRows[index] ? (
+                <div className="flex items-center gap-1 w-28 shrink-0">
+                  <input
+                    placeholder="unité"
+                    value={ingredient.unit ?? ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setIngredients((prev) =>
+                        prev.map((item, i) => (i === index ? { ...item, unit: value } : item))
+                      );
+                    }}
+                    className="w-full h-10 px-3 rounded-full bg-surface text-sm outline-none text-foreground"
+                  />
+                  <button
+                    type="button"
+                    title="Revenir à la liste des unités"
+                    onClick={() => {
+                      setCustomUnitRows((prev) => prev.map((v, i) => (i === index ? false : v)));
+                      setIngredients((prev) =>
+                        prev.map((item, i) => (i === index ? { ...item, unit: "" } : item))
+                      );
+                    }}
+                    className="text-muted text-xs shrink-0"
+                  >
+                    ↺
+                  </button>
+                </div>
+              ) : (
+                <select
+                  value={ingredient.unit ?? ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "__autre__") {
+                      setCustomUnitRows((prev) => prev.map((v, i) => (i === index ? true : v)));
+                      setIngredients((prev) =>
+                        prev.map((item, i) => (i === index ? { ...item, unit: "" } : item))
+                      );
+                      return;
+                    }
+                    setIngredients((prev) =>
+                      prev.map((item, i) => (i === index ? { ...item, unit: value } : item))
+                    );
+                  }}
+                  className="w-28 shrink-0 h-10 px-2 rounded-full bg-surface text-sm outline-none text-foreground"
+                >
+                  {UNIT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                  <option value="__autre__">Autre...</option>
+                </select>
+              )}
+
               <input
                 placeholder="nom de l'ingrédient"
+                list="ingredient-suggestions"
                 value={ingredient.name}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -252,7 +334,10 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
               />
               <button
                 type="button"
-                onClick={() => setIngredients((prev) => prev.filter((_, i) => i !== index))}
+                onClick={() => {
+                  setIngredients((prev) => prev.filter((_, i) => i !== index));
+                  setCustomUnitRows((prev) => prev.filter((_, i) => i !== index));
+                }}
                 className="text-papaya text-sm px-2"
                 aria-label="Supprimer cet ingrédient"
               >
@@ -263,7 +348,10 @@ export function RecipeForm({ action, categories, tags, initial }: RecipeFormProp
         </div>
         <button
           type="button"
-          onClick={() => setIngredients((prev) => [...prev, { name: "", quantity: null, unit: "" }])}
+          onClick={() => {
+            setIngredients((prev) => [...prev, { name: "", quantity: null, unit: "" }]);
+            setCustomUnitRows((prev) => [...prev, false]);
+          }}
           className="mt-2 text-sm text-leaf"
         >
           + Ajouter un ingrédient
