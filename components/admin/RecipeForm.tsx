@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { compressImageToWebp } from "@/lib/image-compression";
 
 interface Ingredient {
   name: string;
@@ -15,7 +16,7 @@ interface Tip {
 }
 
 interface RecipeFormProps {
-  action: (formData: FormData) => void;
+  action: (formData: FormData) => Promise<void>;
   categories: { id: string; name: string }[];
   tags: { id: string; name: string }[];
   ingredientSuggestions?: string[];
@@ -66,7 +67,10 @@ export function RecipeForm({
 }: RecipeFormProps) {
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>(initial?.tagIds ?? []);
   const [imagePreview, setImagePreview] = useState<string | null>(initial?.imageUrl ?? null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [ingredients, setIngredients] = useState<Ingredient[]>(
     initial?.ingredients?.length ? initial.ingredients : [{ name: "", quantity: null, unit: "" }]
   );
@@ -83,8 +87,18 @@ export function RecipeForm({
   );
   const [tips, setTips] = useState<Tip[]>(initial?.tips ?? []);
 
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    if (imageFile) {
+      formData.set("image", imageFile, imageFile.name);
+    }
+    setSubmitting(true);
+    await action(formData);
+  }
+
   return (
-    <form action={action} className="space-y-8">
+    <form onSubmit={handleSubmit} className="space-y-8">
       <div className="grid md:grid-cols-2 gap-4">
         <div>
           <label className="text-sm text-muted block mb-1">titre</label>
@@ -121,17 +135,23 @@ export function RecipeForm({
         )}
         <input
           type="file"
-          name="image"
           accept="image/*"
-          onChange={(e) => {
+          onChange={async (e) => {
             const file = e.target.files?.[0];
-            if (file) {
-              setImagePreview(URL.createObjectURL(file));
-              setRemoveImage(false);
+            if (!file) return;
+            setRemoveImage(false);
+            setCompressing(true);
+            try {
+              const compressed = await compressImageToWebp(file);
+              setImageFile(compressed);
+              setImagePreview(URL.createObjectURL(compressed));
+            } finally {
+              setCompressing(false);
             }
           }}
           className="text-sm text-foreground"
         />
+        {compressing && <p className="text-xs text-muted mt-1">Compression de l&apos;image...</p>}
         {initial?.imageUrl && (
           <label className="flex items-center gap-2 text-sm text-muted mt-2">
             <input
@@ -436,9 +456,10 @@ export function RecipeForm({
 
       <button
         type="submit"
-        className="px-6 h-11 rounded-full bg-leaf text-white text-sm font-heading font-bold"
+        disabled={submitting || compressing}
+        className="px-6 h-11 rounded-full bg-leaf text-white text-sm font-heading font-bold disabled:opacity-60"
       >
-        Enregistrer
+        {submitting ? "Enregistrement..." : "Enregistrer"}
       </button>
     </form>
   );
