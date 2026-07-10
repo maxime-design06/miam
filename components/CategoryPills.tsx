@@ -18,10 +18,10 @@ export function CategoryPills({ categories, activeSlug, searchTerm }: CategoryPi
   const isAllActive = !activeSlug;
 
   return (
-    <div className="flex gap-2 justify-center flex-wrap mb-8">
+    <div className="flex gap-2 overflow-x-auto flex-nowrap mb-8 pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
       <Link
         href={buildHref(undefined)}
-        className={`text-sm px-3.5 py-1.5 rounded-full transition ${
+        className={`shrink-0 whitespace-nowrap text-sm px-3.5 py-1.5 rounded-full transition ${
           isAllActive ? "bg-leaf text-white" : "bg-surface text-foreground hover:opacity-80"
         }`}
       >
@@ -33,7 +33,7 @@ export function CategoryPills({ categories, activeSlug, searchTerm }: CategoryPi
           <Link
             key={category.slug}
             href={buildHref(category.slug)}
-            className={`text-sm px-3.5 py-1.5 rounded-full transition ${
+            className={`shrink-0 whitespace-nowrap text-sm px-3.5 py-1.5 rounded-full transition ${
               isActive ? "bg-leaf text-white" : "bg-surface text-foreground hover:opacity-80"
             }`}
           >
