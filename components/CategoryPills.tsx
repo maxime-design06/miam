@@ -18,7 +18,7 @@ export function CategoryPills({ categories, activeSlug, searchTerm }: CategoryPi
   const isAllActive = !activeSlug;
 
   return (
-    <div className="flex gap-2 overflow-x-auto flex-nowrap mb-8 pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-nowrap mb-8 pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
       <Link
         href={buildHref(undefined)}
         className={`shrink-0 whitespace-nowrap text-sm px-3.5 py-1.5 rounded-full transition ${

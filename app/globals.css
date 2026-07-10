@@ -59,3 +59,14 @@ a:active {
   transform: scale(0.96);
   opacity: 0.75;
 }
+
+/* Masque la barre de défilement tout en gardant le défilement
+   fonctionnel (utilisé pour les listes qui défilent horizontalement) */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer / Edge */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
