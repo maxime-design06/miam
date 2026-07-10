@@ -126,47 +126,56 @@ export default async function RecipePage({
         <span className="capitalize">{recipe.difficulty}</span>
       </div>
 
-      <div className="grid md:grid-cols-[1fr_1.6fr] gap-10">
-        {/* Ingrédients */}
-        <section>
-          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
-            Ingrédients
-          </h2>
-          {recipe.ingredients.length === 0 ? (
-            <p className="text-muted text-sm">Aucun ingrédient renseigné.</p>
-          ) : (
-            <ul className="space-y-2 text-sm text-foreground">
-              {recipe.ingredients.map((ingredient) => (
-                <li key={ingredient.id} className="flex items-start gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-leaf mt-1.5 shrink-0" />
-                  {formatQuantity(ingredient.quantity, ingredient.unit, ingredient.name)}
-                </li>
-              ))}
-            </ul>
+      {recipe.sections.map((section, index) => (
+        <div key={section.id ?? index} className="mb-10">
+          {section.title && (
+            <h2 className="font-heading font-bold text-base text-papaya mb-4">
+              {section.title}
+            </h2>
           )}
-        </section>
+          <div className="grid md:grid-cols-[1fr_1.6fr] gap-10">
+            {/* Ingrédients */}
+            <section>
+              <h3 className="font-heading font-bold text-lg text-foreground mb-4">
+                Ingrédients
+              </h3>
+              {section.ingredients.length === 0 ? (
+                <p className="text-muted text-sm">Aucun ingrédient renseigné.</p>
+              ) : (
+                <ul className="space-y-2 text-sm text-foreground">
+                  {section.ingredients.map((ingredient) => (
+                    <li key={ingredient.id} className="flex items-start gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-leaf mt-1.5 shrink-0" />
+                      {formatQuantity(ingredient.quantity, ingredient.unit, ingredient.name)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
 
-        {/* Étapes */}
-        <section>
-          <h2 className="font-heading font-bold text-lg text-foreground mb-4">
-            Préparation
-          </h2>
-          {recipe.steps.length === 0 ? (
-            <p className="text-muted text-sm">Aucune étape renseignée.</p>
-          ) : (
-            <ol className="space-y-4">
-              {recipe.steps.map((step) => (
-                <li key={step.id} className="flex gap-3 text-sm text-foreground">
-                  <span className="font-heading font-bold text-papaya shrink-0">
-                    {step.stepNumber}
-                  </span>
-                  <p>{step.description}</p>
-                </li>
-              ))}
-            </ol>
-          )}
-        </section>
-      </div>
+            {/* Étapes */}
+            <section>
+              <h3 className="font-heading font-bold text-lg text-foreground mb-4">
+                Préparation
+              </h3>
+              {section.steps.length === 0 ? (
+                <p className="text-muted text-sm">Aucune étape renseignée.</p>
+              ) : (
+                <ol className="space-y-4">
+                  {section.steps.map((step) => (
+                    <li key={step.id} className="flex gap-3 text-sm text-foreground">
+                      <span className="font-heading font-bold text-papaya shrink-0">
+                        {step.stepNumber}
+                      </span>
+                      <p>{step.description}</p>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </section>
+          </div>
+        </div>
+      ))}
 
       {/* Conseils */}
       {recipe.tips.length > 0 && (

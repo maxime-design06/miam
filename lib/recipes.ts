@@ -39,6 +39,12 @@ export async function isLoggedIn(): Promise<boolean> {
   return Boolean(data.user);
 }
 
+export interface RecipeSectionData {
+  title: string;
+  ingredients: { name: string; quantity: number | null; unit: string | null }[];
+  steps: { description: string }[];
+}
+
 export interface RecipeEditData {
   id: string;
   title: string;
@@ -52,9 +58,76 @@ export interface RecipeEditData {
   difficulty: string;
   categoryId: string | null;
   tagIds: string[];
-  ingredients: { name: string; quantity: number | null; unit: string | null }[];
-  steps: { description: string }[];
+  sections: RecipeSectionData[];
   tips: { tip: string }[];
+}
+
+type SectionRow = { id: string; title: string; display_order: number };
+type IngredientRow = {
+  id: string;
+  section_id: string | null;
+  name: string;
+  quantity: number | null;
+  unit: string | null;
+};
+type StepRow = { id: string; section_id: string | null; step_number: number; description: string };
+
+/**
+ * Récupère les parties d'une recette (base, garniture, etc.), avec
+ * leurs ingrédients et étapes regroupés. Les recettes créées avant
+ * cette fonctionnalité n'ont aucune ligne dans recipe_sections : dans
+ * ce cas, on regroupe tout dans une partie implicite sans titre, pour
+ * que rien ne se perde.
+ */
+async function fetchRecipeSections(supabase: SupabaseServerClient, recipeId: string) {
+  const [{ data: sectionRows }, { data: ingredientRows }, { data: stepRows }] = await Promise.all([
+    supabase
+      .from("recipe_sections")
+      .select("id, title, display_order")
+      .eq("recipe_id", recipeId)
+      .order("display_order"),
+    supabase
+      .from("ingredients")
+      .select("id, section_id, name, quantity, unit")
+      .eq("recipe_id", recipeId)
+      .order("display_order"),
+    supabase
+      .from("steps")
+      .select("id, section_id, step_number, description")
+      .eq("recipe_id", recipeId)
+      .order("step_number"),
+  ]);
+
+  const sections = (sectionRows as SectionRow[]) ?? [];
+  const ingredients = (ingredientRows as IngredientRow[]) ?? [];
+  const steps = (stepRows as StepRow[]) ?? [];
+
+  if (sections.length === 0) {
+    return [
+      {
+        id: null as string | null,
+        title: "",
+        ingredients: ingredients.map((i) => ({
+          id: i.id,
+          name: i.name,
+          quantity: i.quantity,
+          unit: i.unit,
+        })),
+        steps: steps.map((s) => ({ id: s.id, stepNumber: s.step_number, description: s.description })),
+      },
+    ];
+  }
+
+  return sections.map((section) => ({
+    id: section.id as string | null,
+    title: section.title,
+    ingredients: ingredients
+      .filter((i) => i.section_id === section.id)
+      .map((i) => ({ id: i.id, name: i.name, quantity: i.quantity, unit: i.unit })),
+    steps: steps
+      .filter((s) => s.section_id === section.id)
+      .map((s) => ({ id: s.id, stepNumber: s.step_number, description: s.description })),
+  }));
 }
 
 /**
@@ -77,26 +150,12 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
     return null;
   }
 
-  const [{ data: ingredients }, { data: steps }, { data: tips }, { data: categoryLink }, { data: tagLinks }] =
-    await Promise.all([
-      supabase
-        .from("ingredients")
-        .select("name, quantity, unit")
-        .eq("recipe_id", id)
-        .order("display_order"),
-      supabase.from("steps").select("description").eq("recipe_id", id).order("step_number"),
-      supabase
-        .from("recipe_tips")
-        .select("tip")
-        .eq("recipe_id", id)
-        .order("display_order"),
-      supabase
-        .from("recipe_categories")
-        .select("category_id")
-        .eq("recipe_id", id)
-        .maybeSingle(),
-      supabase.from("recipe_tags").select("tag_id").eq("recipe_id", id),
-    ]);
+  const [sections, { data: tips }, { data: categoryLink }, { data: tagLinks }] = await Promise.all([
+    fetchRecipeSections(supabase, id),
+    supabase.from("recipe_tips").select("tip").eq("recipe_id", id).order("display_order"),
+    supabase.from("recipe_categories").select("category_id").eq("recipe_id", id).maybeSingle(),
+    supabase.from("recipe_tags").select("tag_id").eq("recipe_id", id),
+  ]);
 
   return {
     id: recipe.id,
@@ -111,12 +170,15 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
     difficulty: recipe.difficulty ?? "facile",
     categoryId: categoryLink?.category_id ?? null,
     tagIds: (tagLinks ?? []).map((link) => link.tag_id),
-    ingredients: (ingredients ?? []).map((i) => ({
-      name: i.name,
-      quantity: i.quantity,
-      unit: i.unit,
+    sections: sections.map((section) => ({
+      title: section.title,
+      ingredients: section.ingredients.map((i) => ({
+        name: i.name,
+        quantity: i.quantity,
+        unit: i.unit,
+      })),
+      steps: section.steps.map((s) => ({ description: s.description })),
     })),
-    steps: (steps ?? []).map((s) => ({ description: s.description })),
     tips: (tips ?? []).map((t) => ({ tip: t.tip })),
   };
 }
@@ -181,18 +243,24 @@ export async function getCategories() {
   return data ?? [];
 }
 
-export interface RecipeDetail extends Recipe {
-  sourceUrl: string | null;
+export interface PublicRecipeSection {
+  id: string | null;
+  title: string;
   ingredients: { id: string; name: string; quantity: number | null; unit: string | null }[];
   steps: { id: string; stepNumber: number; description: string }[];
+}
+
+export interface RecipeDetail extends Recipe {
+  sourceUrl: string | null;
+  sections: PublicRecipeSection[];
   tips: { id: string; tip: string }[];
   tags: { id: string; name: string }[];
 }
 
 /**
- * Récupère une recette complète (ingrédients, étapes, conseils, catégorie)
- * à partir de son slug, pour la page de fiche recette.
- * Renvoie null si aucune recette ne correspond.
+ * Récupère une recette complète (parties, ingrédients, étapes,
+ * conseils, catégorie) à partir de son slug, pour la page de fiche
+ * recette. Renvoie null si aucune recette ne correspond.
  */
 export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null> {
   const supabase = await createClient();
@@ -212,30 +280,16 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
     return null;
   }
 
-  const [{ data: ingredients }, { data: steps }, { data: tips }, { data: categoryLink }, { data: tagLinks }] =
-    await Promise.all([
-      supabase
-        .from("ingredients")
-        .select("id, name, quantity, unit")
-        .eq("recipe_id", recipe.id)
-        .order("display_order"),
-      supabase
-        .from("steps")
-        .select("id, step_number, description")
-        .eq("recipe_id", recipe.id)
-        .order("step_number"),
-      supabase
-        .from("recipe_tips")
-        .select("id, tip")
-        .eq("recipe_id", recipe.id)
-        .order("display_order"),
-      supabase
-        .from("recipe_categories")
-        .select("categories ( name )")
-        .eq("recipe_id", recipe.id)
-        .maybeSingle(),
-      supabase.from("recipe_tags").select("tags ( id, name )").eq("recipe_id", recipe.id),
-    ]);
+  const [sections, { data: tips }, { data: categoryLink }, { data: tagLinks }] = await Promise.all([
+    fetchRecipeSections(supabase, recipe.id),
+    supabase.from("recipe_tips").select("id, tip").eq("recipe_id", recipe.id).order("display_order"),
+    supabase
+      .from("recipe_categories")
+      .select("categories ( name )")
+      .eq("recipe_id", recipe.id)
+      .maybeSingle(),
+    supabase.from("recipe_tags").select("tags ( id, name )").eq("recipe_id", recipe.id),
+  ]);
 
   const categoryEntry = categoryLink?.categories;
   const category = Array.isArray(categoryEntry) ? categoryEntry[0]?.name : undefined;
@@ -260,17 +314,7 @@ export async function getRecipeBySlug(slug: string): Promise<RecipeDetail | null
     difficulty: recipe.difficulty ?? "facile",
     category: resolvedCategory,
     accentColor: categoryAccent[resolvedCategory] ?? "kiwi",
-    ingredients: (ingredients ?? []).map((i) => ({
-      id: i.id,
-      name: i.name,
-      quantity: i.quantity,
-      unit: i.unit,
-    })),
-    steps: (steps ?? []).map((s) => ({
-      id: s.id,
-      stepNumber: s.step_number,
-      description: s.description,
-    })),
+    sections,
     tips: (tips ?? []).map((t) => ({ id: t.id, tip: t.tip })),
     tags,
   };

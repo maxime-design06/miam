@@ -25,6 +25,12 @@ export async function signOut() {
   redirect("/admin/login");
 }
 
+interface RecipeSectionPayload {
+  title: string;
+  ingredients: { name: string; quantity: number | null; unit: string | null }[];
+  steps: { description: string }[];
+}
+
 interface RecipeFormPayload {
   title: string;
   slug: string;
@@ -36,8 +42,7 @@ interface RecipeFormPayload {
   difficulty: string;
   categoryId: string | null;
   tagIds: string[];
-  ingredients: { name: string; quantity: number | null; unit: string | null }[];
-  steps: { description: string }[];
+  sections: RecipeSectionPayload[];
   tips: { tip: string }[];
 }
 
@@ -45,6 +50,20 @@ function parseRecipeForm(formData: FormData): RecipeFormPayload {
   const title = String(formData.get("title") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
   const sourceUrlInput = String(formData.get("sourceUrl") ?? "").trim();
+
+  const rawSections: {
+    title?: string;
+    ingredients?: { name: string; quantity: number | null; unit: string | null }[];
+    steps?: { description: string }[];
+  }[] = JSON.parse(String(formData.get("sectionsJson") ?? "[]"));
+
+  const sections: RecipeSectionPayload[] = rawSections
+    .map((section) => ({
+      title: section.title?.trim() ?? "",
+      ingredients: (section.ingredients ?? []).filter((i) => i.name?.trim()),
+      steps: (section.steps ?? []).filter((s) => s.description?.trim()),
+    }))
+    .filter((section) => section.title || section.ingredients.length > 0 || section.steps.length > 0);
 
   return {
     title,
@@ -57,12 +76,7 @@ function parseRecipeForm(formData: FormData): RecipeFormPayload {
     difficulty: String(formData.get("difficulty") ?? "facile"),
     categoryId: (formData.get("categoryId") as string) || null,
     tagIds: formData.getAll("tagIds").map(String),
-    ingredients: JSON.parse(String(formData.get("ingredientsJson") ?? "[]")).filter(
-      (i: { name: string }) => i.name?.trim()
-    ),
-    steps: JSON.parse(String(formData.get("stepsJson") ?? "[]")).filter(
-      (s: { description: string }) => s.description?.trim()
-    ),
+    sections,
     tips: JSON.parse(String(formData.get("tipsJson") ?? "[]")).filter((t: { tip: string }) =>
       t.tip?.trim()
     ),
@@ -93,28 +107,51 @@ async function saveRelatedData(
     );
   }
 
+  // On supprime les anciennes parties (ce qui supprime en cascade
+  // leurs ingrédients/étapes), puis on nettoie aussi par précaution
+  // les éventuels ingrédients/étapes d'anciennes recettes qui
+  // n'avaient pas encore de partie du tout.
+  await supabase.from("recipe_sections").delete().eq("recipe_id", recipeId);
   await supabase.from("ingredients").delete().eq("recipe_id", recipeId);
-  if (payload.ingredients.length > 0) {
-    await supabase.from("ingredients").insert(
-      payload.ingredients.map((ingredient, index) => ({
-        recipe_id: recipeId,
-        name: ingredient.name,
-        quantity: ingredient.quantity,
-        unit: ingredient.unit,
-        display_order: index,
-      }))
-    );
-  }
-
   await supabase.from("steps").delete().eq("recipe_id", recipeId);
-  if (payload.steps.length > 0) {
-    await supabase.from("steps").insert(
-      payload.steps.map((step, index) => ({
-        recipe_id: recipeId,
-        step_number: index + 1,
-        description: step.description,
-      }))
-    );
+
+  for (let sectionIndex = 0; sectionIndex < payload.sections.length; sectionIndex++) {
+    const section = payload.sections[sectionIndex];
+
+    const { data: sectionRow, error: sectionError } = await supabase
+      .from("recipe_sections")
+      .insert({ recipe_id: recipeId, title: section.title, display_order: sectionIndex })
+      .select("id")
+      .single();
+
+    if (sectionError || !sectionRow) {
+      console.error("Erreur lors de la création d'une partie de recette :", sectionError?.message);
+      continue;
+    }
+
+    if (section.ingredients.length > 0) {
+      await supabase.from("ingredients").insert(
+        section.ingredients.map((ingredient, index) => ({
+          recipe_id: recipeId,
+          section_id: sectionRow.id,
+          name: ingredient.name,
+          quantity: ingredient.quantity,
+          unit: ingredient.unit,
+          display_order: index,
+        }))
+      );
+    }
+
+    if (section.steps.length > 0) {
+      await supabase.from("steps").insert(
+        section.steps.map((step, index) => ({
+          recipe_id: recipeId,
+          section_id: sectionRow.id,
+          step_number: index + 1,
+          description: step.description,
+        }))
+      );
+    }
   }
 
   await supabase.from("recipe_tips").delete().eq("recipe_id", recipeId);

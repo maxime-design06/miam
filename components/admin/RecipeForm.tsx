@@ -14,6 +14,11 @@ interface Step {
 interface Tip {
   tip: string;
 }
+interface RecipeSection {
+  title: string;
+  ingredients: Ingredient[];
+  steps: Step[];
+}
 
 interface RecipeFormProps {
   action: (formData: FormData) => Promise<void>;
@@ -32,8 +37,7 @@ interface RecipeFormProps {
     difficulty: string;
     categoryId: string | null;
     tagIds?: string[];
-    ingredients: Ingredient[];
-    steps: Step[];
+    sections: RecipeSection[];
     tips: Tip[];
   };
 }
@@ -58,6 +62,12 @@ const UNIT_OPTIONS = [
   { value: "sachet", label: "sachet" },
 ];
 
+const emptySection = (): RecipeSection => ({
+  title: "",
+  ingredients: [{ name: "", quantity: null, unit: "" }],
+  steps: [{ description: "" }],
+});
+
 export function RecipeForm({
   action,
   categories,
@@ -71,21 +81,117 @@ export function RecipeForm({
   const [removeImage, setRemoveImage] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [ingredients, setIngredients] = useState<Ingredient[]>(
-    initial?.ingredients?.length ? initial.ingredients : [{ name: "", quantity: null, unit: "" }]
+
+  const [sections, setSections] = useState<RecipeSection[]>(
+    initial?.sections?.length ? initial.sections : [emptySection()]
   );
-  // Pour chaque ingrédient, indique si on est en train de saisir une unité
-  // "libre" (absente de la liste déroulante) plutôt que de choisir dedans.
-  const [customUnitRows, setCustomUnitRows] = useState<boolean[]>(() =>
-    (initial?.ingredients?.length ? initial.ingredients : [{ name: "", quantity: null, unit: "" }]).map(
-      (ingredient) =>
-        Boolean(ingredient.unit) && !UNIT_OPTIONS.some((option) => option.value === ingredient.unit)
+  // Pour chaque ingrédient de chaque partie, indique si on saisit une
+  // unité "libre" (absente de la liste déroulante) plutôt qu'une unité
+  // choisie dedans. Structure : customUnitRows[sectionIndex][ingredientIndex]
+  const [customUnitRows, setCustomUnitRows] = useState<boolean[][]>(() =>
+    (initial?.sections?.length ? initial.sections : [emptySection()]).map((section) =>
+      section.ingredients.map(
+        (ingredient) =>
+          Boolean(ingredient.unit) && !UNIT_OPTIONS.some((option) => option.value === ingredient.unit)
+      )
     )
   );
-  const [steps, setSteps] = useState<Step[]>(
-    initial?.steps?.length ? initial.steps : [{ description: "" }]
-  );
+
   const [tips, setTips] = useState<Tip[]>(initial?.tips ?? []);
+
+  function updateSection(sectionIndex: number, patch: Partial<RecipeSection>) {
+    setSections((prev) =>
+      prev.map((section, i) => (i === sectionIndex ? { ...section, ...patch } : section))
+    );
+  }
+
+  function addSection() {
+    setSections((prev) => [...prev, emptySection()]);
+    setCustomUnitRows((prev) => [...prev, [false]]);
+  }
+
+  function removeSection(sectionIndex: number) {
+    setSections((prev) => prev.filter((_, i) => i !== sectionIndex));
+    setCustomUnitRows((prev) => prev.filter((_, i) => i !== sectionIndex));
+  }
+
+  function updateIngredient(sectionIndex: number, ingredientIndex: number, patch: Partial<Ingredient>) {
+    setSections((prev) =>
+      prev.map((section, i) =>
+        i === sectionIndex
+          ? {
+              ...section,
+              ingredients: section.ingredients.map((ingredient, j) =>
+                j === ingredientIndex ? { ...ingredient, ...patch } : ingredient
+              ),
+            }
+          : section
+      )
+    );
+  }
+
+  function addIngredient(sectionIndex: number) {
+    setSections((prev) =>
+      prev.map((section, i) =>
+        i === sectionIndex
+          ? { ...section, ingredients: [...section.ingredients, { name: "", quantity: null, unit: "" }] }
+          : section
+      )
+    );
+    setCustomUnitRows((prev) => prev.map((rows, i) => (i === sectionIndex ? [...rows, false] : rows)));
+  }
+
+  function removeIngredient(sectionIndex: number, ingredientIndex: number) {
+    setSections((prev) =>
+      prev.map((section, i) =>
+        i === sectionIndex
+          ? { ...section, ingredients: section.ingredients.filter((_, j) => j !== ingredientIndex) }
+          : section
+      )
+    );
+    setCustomUnitRows((prev) =>
+      prev.map((rows, i) => (i === sectionIndex ? rows.filter((_, j) => j !== ingredientIndex) : rows))
+    );
+  }
+
+  function setCustomUnit(sectionIndex: number, ingredientIndex: number, value: boolean) {
+    setCustomUnitRows((prev) =>
+      prev.map((rows, i) =>
+        i === sectionIndex ? rows.map((v, j) => (j === ingredientIndex ? value : v)) : rows
+      )
+    );
+  }
+
+  function updateStep(sectionIndex: number, stepIndex: number, description: string) {
+    setSections((prev) =>
+      prev.map((section, i) =>
+        i === sectionIndex
+          ? {
+              ...section,
+              steps: section.steps.map((step, j) => (j === stepIndex ? { description } : step)),
+            }
+          : section
+      )
+    );
+  }
+
+  function addStep(sectionIndex: number) {
+    setSections((prev) =>
+      prev.map((section, i) =>
+        i === sectionIndex ? { ...section, steps: [...section.steps, { description: "" }] } : section
+      )
+    );
+  }
+
+  function removeStep(sectionIndex: number, stepIndex: number) {
+    setSections((prev) =>
+      prev.map((section, i) =>
+        i === sectionIndex
+          ? { ...section, steps: section.steps.filter((_, j) => j !== stepIndex) }
+          : section
+      )
+    );
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -126,11 +232,7 @@ export function RecipeForm({
         <label className="text-sm text-muted block mb-2">photo</label>
         {imagePreview && !removeImage && (
           <div className="mb-3">
-            <img
-              src={imagePreview}
-              alt="Aperçu"
-              className="w-40 h-28 object-cover rounded-2xl"
-            />
+            <img src={imagePreview} alt="Aperçu" className="w-40 h-28 object-cover rounded-2xl" />
           </div>
         )}
         <input
@@ -242,9 +344,7 @@ export function RecipeForm({
                   type="button"
                   onClick={() =>
                     setSelectedTagIds((prev) =>
-                      prev.includes(tag.id)
-                        ? prev.filter((id) => id !== tag.id)
-                        : [...prev, tag.id]
+                      prev.includes(tag.id) ? prev.filter((id) => id !== tag.id) : [...prev, tag.id]
                     )
                   }
                   className={`text-sm px-3.5 py-1.5 rounded-full transition ${
@@ -262,157 +362,169 @@ export function RecipeForm({
         ))}
       </div>
 
-      {/* Ingrédients */}
-      <div>
-        <label className="text-sm text-muted block mb-2">ingrédients</label>
-        <datalist id="ingredient-suggestions">
-          {ingredientSuggestions.map((name) => (
-            <option key={name} value={name} />
-          ))}
-        </datalist>
-        <div className="space-y-2">
-          {ingredients.map((ingredient, index) => (
-            <div key={index} className="flex gap-2">
-              <input
-                placeholder="quantité"
-                type="number"
-                value={ingredient.quantity ?? ""}
-                onChange={(e) => {
-                  const value = e.target.value === "" ? null : Number(e.target.value);
-                  setIngredients((prev) =>
-                    prev.map((item, i) => (i === index ? { ...item, quantity: value } : item))
-                  );
-                }}
-                className="w-20 h-10 px-3 rounded-full bg-surface text-sm outline-none text-foreground"
-              />
+      <datalist id="ingredient-suggestions">
+        {ingredientSuggestions.map((name) => (
+          <option key={name} value={name} />
+        ))}
+      </datalist>
 
-              {customUnitRows[index] ? (
-                <div className="flex items-center gap-1 w-28 shrink-0">
-                  <input
-                    placeholder="unité"
-                    value={ingredient.unit ?? ""}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      setIngredients((prev) =>
-                        prev.map((item, i) => (i === index ? { ...item, unit: value } : item))
-                      );
-                    }}
-                    className="w-full h-10 px-3 rounded-full bg-surface text-sm outline-none text-foreground"
-                  />
-                  <button
-                    type="button"
-                    title="Revenir à la liste des unités"
-                    onClick={() => {
-                      setCustomUnitRows((prev) => prev.map((v, i) => (i === index ? false : v)));
-                      setIngredients((prev) =>
-                        prev.map((item, i) => (i === index ? { ...item, unit: "" } : item))
-                      );
-                    }}
-                    className="text-muted text-xs shrink-0"
-                  >
-                    ↺
-                  </button>
-                </div>
-              ) : (
-                <select
-                  value={ingredient.unit ?? ""}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === "__autre__") {
-                      setCustomUnitRows((prev) => prev.map((v, i) => (i === index ? true : v)));
-                      setIngredients((prev) =>
-                        prev.map((item, i) => (i === index ? { ...item, unit: "" } : item))
-                      );
-                      return;
-                    }
-                    setIngredients((prev) =>
-                      prev.map((item, i) => (i === index ? { ...item, unit: value } : item))
-                    );
-                  }}
-                  className="w-28 shrink-0 h-10 px-2 rounded-full bg-surface text-sm outline-none text-foreground"
+      {/* Parties de la recette */}
+      <div className="space-y-6">
+        <label className="text-sm text-muted block">
+          composition de la recette
+        </label>
+
+        {sections.map((section, sectionIndex) => (
+          <div key={sectionIndex} className="bg-surface rounded-2xl p-4 space-y-5">
+            <div className="flex items-center gap-2">
+              <input
+                placeholder='Titre de cette partie (ex : "Garniture") — laisse vide pour une recette simple'
+                value={section.title}
+                onChange={(e) => updateSection(sectionIndex, { title: e.target.value })}
+                className="flex-1 h-10 px-4 rounded-full bg-background text-sm outline-none text-foreground"
+              />
+              {sections.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => removeSection(sectionIndex)}
+                  className="text-papaya text-sm px-2 shrink-0"
                 >
-                  {UNIT_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                  <option value="__autre__">Autre...</option>
-                </select>
+                  Supprimer cette partie
+                </button>
               )}
+            </div>
 
-              <input
-                placeholder="nom de l'ingrédient"
-                list="ingredient-suggestions"
-                value={ingredient.name}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setIngredients((prev) =>
-                    prev.map((item, i) => (i === index ? { ...item, name: value } : item))
-                  );
-                }}
-                className="flex-1 h-10 px-3 rounded-full bg-surface text-sm outline-none text-foreground"
-              />
+            {/* Ingrédients de la partie */}
+            <div>
+              <label className="text-sm text-muted block mb-2">ingrédients</label>
+              <div className="space-y-2">
+                {section.ingredients.map((ingredient, ingredientIndex) => (
+                  <div key={ingredientIndex} className="flex gap-2">
+                    <input
+                      placeholder="quantité"
+                      type="number"
+                      value={ingredient.quantity ?? ""}
+                      onChange={(e) =>
+                        updateIngredient(sectionIndex, ingredientIndex, {
+                          quantity: e.target.value === "" ? null : Number(e.target.value),
+                        })
+                      }
+                      className="w-20 h-10 px-3 rounded-full bg-background text-sm outline-none text-foreground"
+                    />
+
+                    {customUnitRows[sectionIndex]?.[ingredientIndex] ? (
+                      <div className="flex items-center gap-1 w-28 shrink-0">
+                        <input
+                          placeholder="unité"
+                          value={ingredient.unit ?? ""}
+                          onChange={(e) =>
+                            updateIngredient(sectionIndex, ingredientIndex, { unit: e.target.value })
+                          }
+                          className="w-full h-10 px-3 rounded-full bg-background text-sm outline-none text-foreground"
+                        />
+                        <button
+                          type="button"
+                          title="Revenir à la liste des unités"
+                          onClick={() => {
+                            setCustomUnit(sectionIndex, ingredientIndex, false);
+                            updateIngredient(sectionIndex, ingredientIndex, { unit: "" });
+                          }}
+                          className="text-muted text-xs shrink-0"
+                        >
+                          ↺
+                        </button>
+                      </div>
+                    ) : (
+                      <select
+                        value={ingredient.unit ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === "__autre__") {
+                            setCustomUnit(sectionIndex, ingredientIndex, true);
+                            updateIngredient(sectionIndex, ingredientIndex, { unit: "" });
+                            return;
+                          }
+                          updateIngredient(sectionIndex, ingredientIndex, { unit: value });
+                        }}
+                        className="w-28 shrink-0 h-10 px-2 rounded-full bg-background text-sm outline-none text-foreground"
+                      >
+                        {UNIT_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                        <option value="__autre__">Autre...</option>
+                      </select>
+                    )}
+
+                    <input
+                      placeholder="nom de l'ingrédient"
+                      list="ingredient-suggestions"
+                      value={ingredient.name}
+                      onChange={(e) =>
+                        updateIngredient(sectionIndex, ingredientIndex, { name: e.target.value })
+                      }
+                      className="flex-1 h-10 px-3 rounded-full bg-background text-sm outline-none text-foreground"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeIngredient(sectionIndex, ingredientIndex)}
+                      className="text-papaya text-sm px-2"
+                      aria-label="Supprimer cet ingrédient"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
               <button
                 type="button"
-                onClick={() => {
-                  setIngredients((prev) => prev.filter((_, i) => i !== index));
-                  setCustomUnitRows((prev) => prev.filter((_, i) => i !== index));
-                }}
-                className="text-papaya text-sm px-2"
-                aria-label="Supprimer cet ingrédient"
+                onClick={() => addIngredient(sectionIndex)}
+                className="mt-2 text-sm text-leaf"
               >
-                ×
+                + Ajouter un ingrédient
               </button>
             </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setIngredients((prev) => [...prev, { name: "", quantity: null, unit: "" }]);
-            setCustomUnitRows((prev) => [...prev, false]);
-          }}
-          className="mt-2 text-sm text-leaf"
-        >
-          + Ajouter un ingrédient
-        </button>
-      </div>
 
-      {/* Étapes */}
-      <div>
-        <label className="text-sm text-muted block mb-2">étapes</label>
-        <div className="space-y-2">
-          {steps.map((step, index) => (
-            <div key={index} className="flex gap-2">
-              <span className="font-heading font-bold text-papaya w-6 pt-2 text-sm">{index + 1}</span>
-              <textarea
-                value={step.description}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setSteps((prev) =>
-                    prev.map((item, i) => (i === index ? { ...item, description: value } : item))
-                  );
-                }}
-                rows={2}
-                className="flex-1 px-4 py-2 rounded-2xl bg-surface text-sm outline-none text-foreground"
-              />
+            {/* Étapes de la partie */}
+            <div>
+              <label className="text-sm text-muted block mb-2">étapes</label>
+              <div className="space-y-2">
+                {section.steps.map((step, stepIndex) => (
+                  <div key={stepIndex} className="flex gap-2">
+                    <span className="font-heading font-bold text-papaya w-6 pt-2 text-sm">
+                      {stepIndex + 1}
+                    </span>
+                    <textarea
+                      value={step.description}
+                      onChange={(e) => updateStep(sectionIndex, stepIndex, e.target.value)}
+                      rows={2}
+                      className="flex-1 px-4 py-2 rounded-2xl bg-background text-sm outline-none text-foreground"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeStep(sectionIndex, stepIndex)}
+                      className="text-papaya text-sm px-2"
+                      aria-label="Supprimer cette étape"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
               <button
                 type="button"
-                onClick={() => setSteps((prev) => prev.filter((_, i) => i !== index))}
-                className="text-papaya text-sm px-2"
-                aria-label="Supprimer cette étape"
+                onClick={() => addStep(sectionIndex)}
+                className="mt-2 text-sm text-leaf"
               >
-                ×
+                + Ajouter une étape
               </button>
             </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => setSteps((prev) => [...prev, { description: "" }])}
-          className="mt-2 text-sm text-leaf"
-        >
-          + Ajouter une étape
+          </div>
+        ))}
+
+        <button type="button" onClick={addSection} className="text-sm text-leaf">
+          + Ajouter une partie (ex : garniture, accompagnement...)
         </button>
       </div>
 
@@ -450,8 +562,7 @@ export function RecipeForm({
         </button>
       </div>
 
-      <input type="hidden" name="ingredientsJson" value={JSON.stringify(ingredients)} />
-      <input type="hidden" name="stepsJson" value={JSON.stringify(steps)} />
+      <input type="hidden" name="sectionsJson" value={JSON.stringify(sections)} />
       <input type="hidden" name="tipsJson" value={JSON.stringify(tips)} />
 
       <button
