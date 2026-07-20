@@ -136,7 +136,11 @@ Nettoie les emojis et les hashtags. Si une information est absente, fais une est
 raisonnable plutôt que de laisser un champ vide, sauf pour les temps où 0 est acceptable.
 La grande majorité des recettes n'ont qu'une seule partie (un seul élément dans "sections"
 avec un titre vide) : ne découpe en plusieurs parties que si c'est vraiment explicite dans
-le texte.`;
+le texte.
+
+Si le texte source est dans une langue autre que le français (anglais, espagnol, etc.),
+traduis TOUT en français dans ta réponse : titre, description, noms d'ingrédients, unités,
+étapes et conseils compris. Ne laisse aucun mot dans la langue d'origine.`;
 
 function extractResponseText(response: {
   text?: string | (() => string);
