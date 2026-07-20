@@ -189,58 +189,73 @@ export async function getRecipeForAdmin(id: string): Promise<RecipeEditData | nu
  * des suggestions de saisie dans le formulaire de recette.
  */
 export async function getPopularIngredientNames(limit = 150): Promise<string[]> {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data, error } = await supabase.from("ingredients").select("name");
+    const { data, error } = await supabase.from("ingredients").select("name");
 
-  if (error || !data) {
-    if (error) console.error("Erreur lors de la récupération des ingrédients :", error.message);
-    return [];
-  }
+    if (error || !data) {
+      if (error) console.error("Erreur lors de la récupération des ingrédients :", error.message);
+      return [];
+    }
 
-  const counts = new Map<string, number>();
-  for (const row of data) {
-    const name = row.name?.trim();
-    if (!name) continue;
-    counts.set(name, (counts.get(name) ?? 0) + 1);
-  }
+    const counts = new Map<string, number>();
+    for (const row of data) {
+      const name = row.name?.trim();
+      if (!name) continue;
+      counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
 
   return Array.from(counts.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, limit)
     .map(([name]) => name);
+  } catch (err) {
+    console.error("Erreur inattendue lors de la récupération des ingrédients :", err);
+    return [];
+  }
 }
 
 export async function getTags() {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("tags")
-    .select("id, name, slug")
-    .order("name");
+    const { data, error } = await supabase
+      .from("tags")
+      .select("id, name, slug")
+      .order("name");
 
-  if (error) {
-    console.error("Erreur lors de la récupération des tags :", error.message);
+    if (error) {
+      console.error("Erreur lors de la récupération des tags :", error.message);
+      return [];
+    }
+
+    return data ?? [];
+  } catch (err) {
+    console.error("Erreur inattendue lors de la récupération des tags :", err);
     return [];
   }
-
-  return data ?? [];
 }
 
 export async function getCategories() {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("categories")
-    .select("id, name, slug")
-    .order("name");
+    const { data, error } = await supabase
+      .from("categories")
+      .select("id, name, slug")
+      .order("name");
 
-  if (error) {
-    console.error("Erreur lors de la récupération des catégories :", error.message);
+    if (error) {
+      console.error("Erreur lors de la récupération des catégories :", error.message);
+      return [];
+    }
+
+    return data ?? [];
+  } catch (err) {
+    console.error("Erreur inattendue lors de la récupération des catégories :", err);
     return [];
   }
-
-  return data ?? [];
 }
 
 export interface PublicRecipeSection {
