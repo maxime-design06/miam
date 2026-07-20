@@ -1,6 +1,6 @@
 "use server";
 
-import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 import { createClient } from "@/lib/supabase/server";
 
 function extractMetaContent(html: string, property: string): string | null {
@@ -138,39 +138,48 @@ La grande majorité des recettes n'ont qu'une seule partie (un seul élément da
 avec un titre vide) : ne découpe en plusieurs parties que si c'est vraiment explicite dans
 le texte.`;
 
+function extractResponseText(response: {
+  text?: string | (() => string);
+  candidates?: { content?: { parts?: { text?: string }[] } }[];
+}): string {
+  if (typeof response.text === "string") return response.text;
+  if (typeof response.text === "function") return response.text();
+  const candidateText = response.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (candidateText) return candidateText;
+  throw new Error("Réponse inattendue de l'IA.");
+}
+
 /**
- * Envoie le texte collé (légende Instagram, etc.) à l'IA pour en extraire
- * une recette structurée, prête à préremplir le formulaire d'ajout.
+ * Envoie le texte collé (légende Instagram, etc.) à l'IA (Google Gemini,
+ * gratuit pour cet usage) pour en extraire une recette structurée, prête
+ * à préremplir le formulaire d'ajout.
  */
 export async function parseRecipeFromText(rawText: string): Promise<ParsedRecipe> {
   if (!rawText.trim()) {
     throw new Error("Le texte est vide.");
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("La clé ANTHROPIC_API_KEY n'est pas configurée sur le serveur.");
+    throw new Error("La clé GEMINI_API_KEY n'est pas configurée sur le serveur.");
   }
 
-  const client = new Anthropic({ apiKey });
+  const ai = new GoogleGenAI({ apiKey });
 
-  const response = await client.messages.create({
-    model: "claude-haiku-4-5-20251001",
-    max_tokens: 2000,
-    system: SYSTEM_PROMPT,
-    messages: [{ role: "user", content: rawText }],
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: rawText,
+    config: {
+      systemInstruction: SYSTEM_PROMPT,
+      responseMimeType: "application/json",
+    },
   });
 
-  const textBlock = response.content.find((block) => block.type === "text");
-  if (!textBlock || textBlock.type !== "text") {
-    throw new Error("Réponse inattendue de l'IA.");
-  }
-
-  const cleaned = textBlock.text.replace(/```json|```/g, "").trim();
+  const text = extractResponseText(response).trim();
 
   let parsed: ParsedRecipe;
   try {
-    parsed = JSON.parse(cleaned);
+    parsed = JSON.parse(text);
   } catch {
     throw new Error("L'IA n'a pas renvoyé un JSON valide, réessaie.");
   }
