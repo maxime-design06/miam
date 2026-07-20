@@ -167,7 +167,7 @@ export async function parseRecipeFromText(rawText: string): Promise<ParsedRecipe
   const ai = new GoogleGenAI({ apiKey });
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash-lite",
+    model: "gemini-3.1-flash-lite",
     contents: rawText,
     config: {
       systemInstruction: SYSTEM_PROMPT,
