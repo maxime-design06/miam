@@ -562,6 +562,11 @@ export function RecipeForm({
         </button>
       </div>
 
+      <input
+        type="hidden"
+        name="existingImageUrl"
+        value={initial?.imageUrl && !removeImage ? initial.imageUrl : ""}
+      />
       <input type="hidden" name="sectionsJson" value={JSON.stringify(sections)} />
       <input type="hidden" name="tipsJson" value={JSON.stringify(tips)} />
 

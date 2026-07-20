@@ -57,6 +57,12 @@ export default async function AdminPage({
         >
           Gérer les catégories
         </Link>
+        <Link
+          href="/admin/recettes/importer"
+          className="inline-block px-4 py-2 rounded-full bg-surface text-foreground text-sm font-heading font-bold"
+        >
+          Importer depuis Instagram
+        </Link>
       </div>
 
       {/* Recherche et tri */}

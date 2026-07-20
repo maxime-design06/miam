@@ -256,6 +256,7 @@ async function uploadRecipeImage(
 export async function createRecipe(formData: FormData) {
   const supabase = await createClient();
   const payload = parseRecipeForm(formData);
+  const existingImageUrl = String(formData.get("existingImageUrl") ?? "").trim() || null;
 
   const { data: recipe, error } = await supabase
     .from("recipes")
@@ -264,6 +265,7 @@ export async function createRecipe(formData: FormData) {
       slug: payload.slug,
       description: payload.description,
       source_url: payload.sourceUrl,
+      image_url: existingImageUrl,
       prep_time_minutes: payload.prepTimeMinutes,
       cook_time_minutes: payload.cookTimeMinutes,
       servings: payload.servings,
@@ -279,10 +281,12 @@ export async function createRecipe(formData: FormData) {
 
   await saveRelatedData(supabase, recipe.id, payload);
 
+  // Une nouvelle photo choisie manuellement prend le pas sur une image
+  // déjà récupérée automatiquement (ex : import Instagram).
   const imageFile = formData.get("image") as File | null;
-  const imageUrl = await uploadRecipeImage(supabase, recipe.id, imageFile);
-  if (imageUrl) {
-    await supabase.from("recipes").update({ image_url: imageUrl }).eq("id", recipe.id);
+  const uploadedImageUrl = await uploadRecipeImage(supabase, recipe.id, imageFile);
+  if (uploadedImageUrl) {
+    await supabase.from("recipes").update({ image_url: uploadedImageUrl }).eq("id", recipe.id);
   }
 
   revalidatePath("/");
