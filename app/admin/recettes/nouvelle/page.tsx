@@ -21,6 +21,7 @@ export default async function NewRecipePage({
       {error && (
         <p className="text-sm text-papaya mb-4">
           Une erreur est survenue, la recette n&apos;a pas pu être créée. Réessaie.
+          {error !== "1" && <span className="block text-xs text-muted mt-1">Détail : {error}</span>}
         </p>
       )}
 

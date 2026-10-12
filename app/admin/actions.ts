@@ -7,6 +7,30 @@ import { slugify } from "@/lib/slugify";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
+/**
+ * Deux recettes ne peuvent pas avoir le même slug (le même "lien").
+ * Si le slug demandé existe déjà, on ajoute -2, -3, etc. automatiquement.
+ */
+async function ensureUniqueSlug(
+  supabase: SupabaseServerClient,
+  baseSlug: string,
+  excludeId?: string
+): Promise<string> {
+  const base = baseSlug || "recette";
+  let query = supabase.from("recipes").select("slug").like("slug", `${base}%`);
+  if (excludeId) query = query.neq("id", excludeId);
+  const { data } = await query;
+  const taken = new Set((data ?? []).map((row) => row.slug as string));
+  if (!taken.has(base)) return base;
+  let suffix = 2;
+  while (taken.has(`${base}-${suffix}`)) suffix++;
+  return `${base}-${suffix}`;
+}
+
+function errorQuery(message: string | undefined) {
+  return encodeURIComponent((message ?? "erreur inconnue").slice(0, 200));
+}
+
 export async function signIn(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
@@ -92,19 +116,29 @@ async function saveRelatedData(
   supabase: SupabaseServerClient,
   recipeId: string,
   payload: RecipeFormPayload
-) {
+): Promise<string | null> {
+  const errors: string[] = [];
+  const track = (label: string, error: { message: string } | null) => {
+    if (error) {
+      console.error(`Erreur (${label}) :`, error.message);
+      errors.push(`${label} : ${error.message}`);
+    }
+  };
+
   await supabase.from("recipe_categories").delete().eq("recipe_id", recipeId);
   if (payload.categoryId) {
-    await supabase
+    const { error } = await supabase
       .from("recipe_categories")
       .insert({ recipe_id: recipeId, category_id: payload.categoryId });
+    track("catégorie", error);
   }
 
   await supabase.from("recipe_tags").delete().eq("recipe_id", recipeId);
   if (payload.tagIds.length > 0) {
-    await supabase.from("recipe_tags").insert(
+    const { error } = await supabase.from("recipe_tags").insert(
       payload.tagIds.map((tagId) => ({ recipe_id: recipeId, tag_id: tagId }))
     );
+    track("tags", error);
   }
 
   // On supprime les anciennes parties (ce qui supprime en cascade
@@ -125,12 +159,12 @@ async function saveRelatedData(
       .single();
 
     if (sectionError || !sectionRow) {
-      console.error("Erreur lors de la création d'une partie de recette :", sectionError?.message);
+      track("partie de recette", sectionError ?? { message: "création impossible" });
       continue;
     }
 
     if (section.ingredients.length > 0) {
-      await supabase.from("ingredients").insert(
+      const { error } = await supabase.from("ingredients").insert(
         section.ingredients.map((ingredient, index) => ({
           recipe_id: recipeId,
           section_id: sectionRow.id,
@@ -140,10 +174,11 @@ async function saveRelatedData(
           display_order: index,
         }))
       );
+      track("ingrédients", error);
     }
 
     if (section.steps.length > 0) {
-      await supabase.from("steps").insert(
+      const { error } = await supabase.from("steps").insert(
         section.steps.map((step, index) => ({
           recipe_id: recipeId,
           section_id: sectionRow.id,
@@ -151,19 +186,23 @@ async function saveRelatedData(
           description: step.description,
         }))
       );
+      track("étapes", error);
     }
   }
 
   await supabase.from("recipe_tips").delete().eq("recipe_id", recipeId);
   if (payload.tips.length > 0) {
-    await supabase.from("recipe_tips").insert(
+    const { error } = await supabase.from("recipe_tips").insert(
       payload.tips.map((tip, index) => ({
         recipe_id: recipeId,
         tip: tip.tip,
         display_order: index,
       }))
     );
+    track("conseils", error);
   }
+
+  return errors.length > 0 ? errors.join(" | ") : null;
 }
 
 export async function createCategory(formData: FormData) {
@@ -256,6 +295,7 @@ async function uploadRecipeImage(
 export async function createRecipe(formData: FormData) {
   const supabase = await createClient();
   const payload = parseRecipeForm(formData);
+  payload.slug = await ensureUniqueSlug(supabase, payload.slug);
   const existingImageUrl = String(formData.get("existingImageUrl") ?? "").trim() || null;
 
   const { data: recipe, error } = await supabase
@@ -276,10 +316,15 @@ export async function createRecipe(formData: FormData) {
 
   if (error || !recipe) {
     console.error("Erreur lors de la création de la recette :", error?.message);
-    redirect("/admin/recettes/nouvelle?error=1");
+    redirect(`/admin/recettes/nouvelle?error=${errorQuery(error?.message)}`);
   }
 
-  await saveRelatedData(supabase, recipe.id, payload);
+  const relatedError = await saveRelatedData(supabase, recipe.id, payload);
+  if (relatedError) {
+    // On retire la recette à moitié créée, pour ne pas laisser de doublon vide.
+    await supabase.from("recipes").delete().eq("id", recipe.id);
+    redirect(`/admin/recettes/nouvelle?error=${errorQuery(relatedError)}`);
+  }
 
   // Une nouvelle photo choisie manuellement prend le pas sur une image
   // déjà récupérée automatiquement (ex : import Instagram).
@@ -297,6 +342,7 @@ export async function createRecipe(formData: FormData) {
 export async function updateRecipe(id: string, formData: FormData) {
   const supabase = await createClient();
   const payload = parseRecipeForm(formData);
+  payload.slug = await ensureUniqueSlug(supabase, payload.slug, id);
 
   const { error } = await supabase
     .from("recipes")
@@ -314,10 +360,13 @@ export async function updateRecipe(id: string, formData: FormData) {
 
   if (error) {
     console.error("Erreur lors de la modification de la recette :", error.message);
-    redirect(`/admin/recettes/${id}?error=1`);
+    redirect(`/admin/recettes/${id}?error=${errorQuery(error.message)}`);
   }
 
-  await saveRelatedData(supabase, id, payload);
+  const relatedError = await saveRelatedData(supabase, id, payload);
+  if (relatedError) {
+    redirect(`/admin/recettes/${id}?error=${errorQuery(relatedError)}`);
+  }
 
   const imageFile = formData.get("image") as File | null;
   const removeImage = formData.get("removeImage") === "on";

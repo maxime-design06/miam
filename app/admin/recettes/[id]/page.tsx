@@ -31,6 +31,7 @@ export default async function EditRecipePage({
       {error && (
         <p className="text-sm text-papaya mb-4">
           Une erreur est survenue, tes modifications n&apos;ont pas pu être enregistrées. Réessaie.
+          {error !== "1" && <span className="block text-xs text-muted mt-1">Détail : {error}</span>}
         </p>
       )}
 

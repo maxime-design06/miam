@@ -81,6 +81,7 @@ export function RecipeForm({
   const [removeImage, setRemoveImage] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const [sections, setSections] = useState<RecipeSection[]>(
     initial?.sections?.length ? initial.sections : [emptySection()]
@@ -200,7 +201,19 @@ export function RecipeForm({
       formData.set("image", imageFile, imageFile.name);
     }
     setSubmitting(true);
-    await action(formData);
+    setSubmitError(null);
+    try {
+      await action(formData);
+    } catch (err) {
+      // Une redirection réussie n'arrive pas ici : on n'affiche donc
+      // que de vraies erreurs (envoi trop lourd, serveur injoignable...).
+      setSubmitError(
+        err instanceof Error && err.message
+          ? err.message
+          : "L'enregistrement a échoué. Vérifie ta connexion et réessaie."
+      );
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -577,6 +590,7 @@ export function RecipeForm({
       >
         {submitting ? "Enregistrement..." : "Enregistrer"}
       </button>
+      {submitError && <p className="text-sm text-papaya">{submitError}</p>}
     </form>
   );
 }

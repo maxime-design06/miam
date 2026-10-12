@@ -3,6 +3,18 @@ import type { Difficulty, Recipe } from "@/types/recipe";
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
+/**
+ * Next.js signale certains cas internes (page qui doit rester dynamique,
+ * redirection...) en levant une erreur spéciale. Un try/catch ne doit
+ * jamais l'avaler : on la relance telle quelle.
+ */
+function rethrowNextInternalError(err: unknown) {
+  const digest = (err as { digest?: unknown } | null)?.digest;
+  if (typeof digest === "string" && (digest === "DYNAMIC_SERVER_USAGE" || digest.startsWith("NEXT_"))) {
+    throw err;
+  }
+}
+
 
 // Couleur d'accent attribuée selon la catégorie (cohérent avec la charte MIAM)
 const categoryAccent: Record<string, Recipe["accentColor"]> = {
@@ -211,6 +223,7 @@ export async function getPopularIngredientNames(limit = 150): Promise<string[]> 
     .slice(0, limit)
     .map(([name]) => name);
   } catch (err) {
+    rethrowNextInternalError(err);
     console.error("Erreur inattendue lors de la récupération des ingrédients :", err);
     return [];
   }
@@ -232,6 +245,7 @@ export async function getTags() {
 
     return data ?? [];
   } catch (err) {
+    rethrowNextInternalError(err);
     console.error("Erreur inattendue lors de la récupération des tags :", err);
     return [];
   }
@@ -253,6 +267,7 @@ export async function getCategories() {
 
     return data ?? [];
   } catch (err) {
+    rethrowNextInternalError(err);
     console.error("Erreur inattendue lors de la récupération des catégories :", err);
     return [];
   }
